@@ -1,0 +1,329 @@
+<!-- PROFILE SELECTION (Logged out state) -->
+@if (!activeProfile) {
+  <div class="profiles-overlay">
+    <div class="profiles-card glass-panel">
+      <h1 class="title-display brand-title">La Tropa Type</h1>
+      <p class="brand-subtitle">Mecanografía profesional para toda la familia</p>
+
+      @if (profiles.length === 0) {
+        <p class="no-profiles">No hay perfiles creados. ¡Crea el primero para comenzar!</p>
+      } @else {
+        <div class="profiles-grid">
+          @for (prof of profiles; track prof.id) {
+            <div class="profile-card glass-panel" (click)="selectProfile(prof)">
+              <div class="avatar">👤</div>
+              <h3>{{ prof.name }}</h3>
+              <div class="prof-stats">
+                <span>Nivel {{ prof.level }}</span>
+                @if (prof.streak !== undefined && prof.streak > 0) {
+                  <span class="streak-badge">🔥 {{ prof.streak }} días</span>
+                }
+              </div>
+              <button class="delete-btn" (click)="deleteProfile(prof.id!, $event)" title="Eliminar Perfil">×</button>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="profile-actions">
+        @if (!showCreateProfile) {
+          <button class="btn-primary" (click)="showCreateProfile = true">Crear Nuevo Perfil</button>
+        } @else {
+          <div class="create-profile-form">
+            <input type="text" [(ngModel)]="newProfileName" placeholder="Nombre de usuario" (keyup.enter)="createProfile()" />
+            <div class="form-buttons">
+              <button class="btn-primary" (click)="createProfile()">Guardar</button>
+              <button class="btn-secondary" (click)="showCreateProfile = false">Cancelar</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MAIN SYSTEM WORKSPACE (Logged in state) -->
+@if (activeProfile && !selectedExercise) {
+  <div class="dashboard-layout">
+    <!-- TOP HEADER -->
+    <header class="app-header glass-panel">
+      <div class="header-logo">
+        <h2 class="title-display">La Tropa Type</h2>
+      </div>
+
+      <div class="header-user">
+        <div class="user-info">
+          <span class="user-name">{{ activeProfile.name }}</span>
+          <span class="user-level">Nivel {{ activeProfile.level }}</span>
+          <!-- XP Progress Bar -->
+          <div class="xp-bar-container" title="Progreso de XP para el siguiente nivel">
+            <div class="xp-bar" [style.width.%]="getXPProgress()"></div>
+          </div>
+        </div>
+        @if (activeProfile.streak !== undefined && activeProfile.streak > 0) {
+          <span class="streak-indicator">🔥 Racha: {{ activeProfile.streak }} días</span>
+        }
+        <button class="btn-secondary logout-btn" (click)="logout()">Cambiar Perfil</button>
+      </div>
+    </header>
+
+    <div class="main-body">
+      <!-- SIDEBAR CONTROLS -->
+      <aside class="sidebar glass-panel">
+        <div class="settings-section">
+          <h3>Estilo Visual</h3>
+          <div class="theme-buttons">
+            <button [class.active-theme]="activeTheme === 'glass'" (click)="setTheme('glass')">Glassmorphism</button>
+            <button [class.active-theme]="activeTheme === 'cyberpunk'" (click)="setTheme('cyberpunk')">Cyberpunk</button>
+            <button [class.active-theme]="activeTheme === 'terminal'" (click)="setTheme('terminal')">Terminal</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Sonidos de Teclas</h3>
+          <div class="sound-toggle">
+            <label class="switch-label">
+              <input type="checkbox" [checked]="sound.soundEnabled()" (change)="sound.soundEnabled.set(!sound.soundEnabled())" />
+              Efectos de Sonido
+            </label>
+          </div>
+          
+          @if (sound.soundEnabled()) {
+            <div class="switch-selector">
+              <label>Switch Mecánico:</label>
+              <select [ngModel]="sound.switchType()" (ngModelChange)="sound.switchType.set($event)">
+                <option value="blue">Cherry MX Blue (Ruidoso)</option>
+                <option value="brown">Cherry MX Brown (Táctil)</option>
+                <option value="typewriter">Máquina de Escribir (Retro)</option>
+              </select>
+            </div>
+          }
+        </div>
+
+        @if (stats && stats.weakest_keys.length > 0) {
+          <div class="smart-drill-section">
+            <h3>Práctica Inteligente</h3>
+            <p>Se ha detectado dificultades con las teclas: <strong>{{ getWeakestKeysString() }}</strong></p>
+            <button class="btn-primary smart-drill-btn" (click)="startSmartPractice()">
+              🎯 Entrenar Debilidades
+            </button>
+          </div>
+        }
+      </aside>
+
+      <!-- MAIN CONTENT PANEL -->
+      <main class="content-panel">
+        <!-- NAVIGATION TABS -->
+        <nav class="content-tabs glass-panel">
+          <button [class.active-tab]="activeTab === 'exercises'" (click)="activeTab = 'exercises'">Lecciones</button>
+          <button [class.active-tab]="activeTab === 'stats'" (click)="activeTab = 'stats'; loadStatsAndRetries()">Estadísticas</button>
+          <button [class.active-tab]="activeTab === 'retries'" (click)="activeTab = 'retries'; loadStatsAndRetries()">
+            Reintentos @if (retries.length > 0) { <span class="badge">{{ retries.length }}</span> }
+          </button>
+          <button [class.active-tab]="activeTab === 'achievements'" (click)="activeTab = 'achievements'; loadStatsAndRetries()">Medallas</button>
+        </nav>
+
+        <!-- TAB CONTENT: EXERCISES -->
+        @if (activeTab === 'exercises') {
+          <div class="tab-pane exercises-pane">
+            <div class="filters glass-panel">
+              <div class="filter-group">
+                <label>Categoría:</label>
+                <select [(ngModel)]="selectedCategory" (change)="loadExercises()">
+                  <option value="">Todas</option>
+                  <option value="spanish">Español</option>
+                  <option value="english">Inglés</option>
+                  <option value="code">Código Real</option>
+                  <option value="numbers">Números</option>
+                  <option value="symbols">Símbolos</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label>Dificultad:</label>
+                <select [(ngModel)]="selectedDifficulty" (change)="loadExercises()">
+                  <option value="">Todas</option>
+                  <option value="easy">Fácil</option>
+                  <option value="medium">Media</option>
+                  <option value="hard">Difícil</option>
+                </select>
+              </div>
+            </div>
+
+            @if (isLoadingExercises) {
+              <div class="pane-loader">
+                <div class="spinner"></div>
+                <span>Cargando lecciones...</span>
+              </div>
+            } @else {
+              <div class="exercises-grid">
+                @for (ex of exercises; track ex.id) {
+                  <div class="exercise-card glass-panel" [class.endurance-card]="ex.is_endurance">
+                    @if (ex.is_endurance) {
+                      <span class="endurance-tag">RESISTENCIA ⚡</span>
+                    }
+                    <span class="card-category">{{ ex.category | uppercase }}</span>
+                    <h3>{{ ex.title }}</h3>
+                    <div class="card-meta">
+                      <span>Dificultad: <strong>{{ ex.difficulty }}</strong></span>
+                      <span>Longitud: <strong>{{ ex.content.length }} caracteres</strong></span>
+                    </div>
+                    <div class="card-actions">
+                      <button class="btn-primary" (click)="startExercise(ex)">Clásico</button>
+                      <button class="btn-secondary arcade-btn" (click)="startArcadeMode(ex)" title="Practica con 3 vidas">Arcade 3♥</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- TAB CONTENT: STATISTICS -->
+        @if (activeTab === 'stats') {
+          <div class="tab-pane stats-pane glass-panel">
+            @if (isLoadingStats || !stats) {
+              <div class="pane-loader">
+                <div class="spinner"></div>
+                <span>Cargando estadísticas de usuario...</span>
+              </div>
+            } @else {
+              <div class="stats-overview">
+                <div class="stat-card-micro">
+                  <span class="value">{{ stats.total_sessions }}</span>
+                  <span class="label">Sesiones Completadas</span>
+                </div>
+                <div class="stat-card-micro">
+                  <span class="value">{{ stats.average_wpm }} WPM</span>
+                  <span class="label">Velocidad Promedio</span>
+                </div>
+                <div class="stat-card-micro">
+                  <span class="value">{{ stats.average_accuracy * 100 | number:'1.0-0' }}%</span>
+                  <span class="label">Precisión Promedio</span>
+                </div>
+                <div class="stat-card-micro">
+                  <span class="value">{{ stats.total_duration / 60 | number:'1.0-0' }} min</span>
+                  <span class="label">Tiempo Activo Total</span>
+                </div>
+              </div>
+
+              <!-- SVG CHART PROGRESS WPM -->
+              <div class="chart-section">
+                <h3>Progreso de Velocidad (Últimas 20 Sesiones)</h3>
+                @if (stats.progress_wpm.length < 2) {
+                  <p class="no-chart-data">Completa al menos 2 sesiones para graficar tu rendimiento.</p>
+                } @else {
+                  <div class="svg-chart-container">
+                    <svg viewBox="0 0 500 150" class="svg-chart">
+                      <!-- Gridlines -->
+                      <line x1="20" y1="20" x2="480" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                      <line x1="20" y1="85" x2="480" y2="85" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                      <line x1="20" y1="130" x2="480" y2="130" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                      
+                      <!-- Line Chart -->
+                      <polyline
+                        fill="none"
+                        stroke="var(--accent)"
+                        stroke-width="3"
+                        [attr.points]="getChartPoints()"
+                      />
+                    </svg>
+                  </div>
+                }
+              </div>
+
+              <!-- WEAK KEYS SECTION -->
+              <div class="weak-keys-section">
+                <h3>Analizador de Teclas Débiles</h3>
+                @if (stats.weakest_keys.length === 0) {
+                  <p class="success-message">¡Excelente! Aún no has acumulado suficientes errores para marcar teclas débiles. Sigue así.</p>
+                } @else {
+                  <div class="weak-keys-grid">
+                    @for (wk of stats.weakest_keys; track wk.char) {
+                      <div class="weak-key-tile">
+                        <span class="key-char">{{ wk.char === ' ' ? 'Espacio' : wk.char }}</span>
+                        <span class="key-error-rate">{{ wk.error_rate * 100 | number:'1.0-0' }}% errores</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- TAB CONTENT: RETRIES -->
+        @if (activeTab === 'retries') {
+          <div class="tab-pane retries-pane">
+            @if (retries.length === 0) {
+              <div class="empty-state glass-panel">
+                <span class="empty-icon">🎉</span>
+                <h3>¡Todo al día!</h3>
+                <p>No tienes lecciones pendientes por debajo del 90% de precisión.</p>
+              </div>
+            } @else {
+              <div class="exercises-grid">
+                @for (ret of retries; track ret.exercise_id) {
+                  <div class="exercise-card glass-panel retry-border">
+                    <span class="card-category">{{ ret.category | uppercase }}</span>
+                    <h3>{{ ret.title }}</h3>
+                    <div class="card-meta">
+                      <span class="low-stat">Última Precisión: <strong>{{ ret.last_accuracy * 100 | number:'1.0-0' }}%</strong></span>
+                      <span>Última Velocidad: <strong>{{ ret.last_wpm }} WPM</strong></span>
+                    </div>
+                    <div class="card-actions">
+                      <button class="btn-primary" (click)="startRetry(ret)">Practicar y Superar</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- TAB CONTENT: ACHIEVEMENTS -->
+        @if (activeTab === 'achievements') {
+          <div class="tab-pane achievements-pane glass-panel">
+            <h3 class="pane-title">Colección de Medallas</h3>
+            <p class="pane-desc">Desbloquea logros practicando a diario. Tienes <strong>{{ stats?.achievements?.length || 0 }}/30</strong> medallas conseguidas.</p>
+
+            <div class="achievements-grid">
+              @for (ach of achievementsCatalog; track ach.code) {
+                <div class="achievement-tile" [class.unlocked]="isUnlocked(ach.code)" [attr.data-tier]="ach.tier">
+                  <div class="ach-icon-box">
+                    @if (ach.tier === 'impossible') {
+                      <span class="ach-icon">💀</span>
+                    } @else if (ach.tier === 'hard') {
+                      <span class="ach-icon">💎</span>
+                    } @else if (ach.tier === 'medium') {
+                      <span class="ach-icon">🏅</span>
+                    } @else {
+                      <span class="ach-icon">🥉</span>
+                    }
+                  </div>
+                  <div class="ach-info">
+                    <h4>{{ ach.name }}</h4>
+                    <p>{{ ach.desc }}</p>
+                  </div>
+                  @if (isUnlocked(ach.code)) {
+                    <span class="unlocked-check">✓</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </main>
+    </div>
+  </div>
+}
+
+<!-- ACTIVE PLAYING WINDOW -->
+@if (selectedExercise) {
+  <app-typing-area 
+    [exercise]="selectedExercise" 
+    [mode]="typingMode"
+    [profileId]="activeProfile!.id!" 
+    (onFinish)="onTypingFinished()">
+  </app-typing-area>
+}

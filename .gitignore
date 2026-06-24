@@ -1,0 +1,80 @@
+# --- Operating System Files ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.byhost
+.ClipboardWorkspace
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.lnk
+*.cab
+*.msi
+*.msm
+*.msp
+System Volume Information
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.trash
+.nfs*
+
+# --- IDEs and Editors ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# --- Node / Angular Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.eslintcache
+
+# --- Go Backend ---
+backend/server
+backend/backend
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+backend/data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# --- Docker & Local Environment ---
+.env
+.env.local
+.env.*.local
+docker-compose.override.yml

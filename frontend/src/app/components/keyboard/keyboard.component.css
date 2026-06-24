@@ -1,0 +1,151 @@
+.keyboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+/* --- Keyboard Grid & Keys --- */
+.keyboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--key-border);
+  width: 100%;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+}
+
+.key {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 44px;
+  height: 44px;
+  padding: 4px 6px;
+  background: var(--key-bg);
+  border: 1px solid var(--key-border);
+  border-radius: 6px;
+  color: var(--key-text);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: default;
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.1s ease;
+}
+
+/* Key labels layout */
+.key-shift {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.key-main {
+  align-self: flex-end;
+  text-transform: uppercase;
+}
+
+/* Special widths for ISO layout keycaps */
+.w-backspace { width: 78px; .key-main { align-self: center; } }
+.w-tab       { width: 56px; .key-main { align-self: center; } }
+.w-enter     { width: 70px; .key-main { align-self: center; } }
+.w-caps      { width: 68px; .key-main { align-self: center; } }
+.w-shift-left{ width: 44px; .key-main { align-self: center; } }
+.w-shift-right{ width: 88px; .key-main { align-self: center; } }
+.w-ctrl      { width: 58px; .key-main { align-self: center; } }
+.w-option    { width: 48px; .key-main { align-self: center; } }
+.w-cmd       { width: 52px; .key-main { align-self: center; } }
+.w-space     { width: 236px; }
+
+/* --- Highlighting States --- */
+.key-active {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 12px var(--accent-glow) !important;
+  transform: scale(0.94);
+  filter: var(--glow-effect);
+}
+
+.key-modifier-active {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* --- Hands SVG Visualization --- */
+.hands-guide {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 450px;
+  margin-top: 10px;
+  gap: 40px;
+}
+
+.hand-svg-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.hand-svg {
+  width: 100px;
+  height: 100px;
+}
+
+/* Default hand aesthetics */
+.hand-wrist, .hand-palm {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 1.5;
+  opacity: 0.25;
+}
+
+.hand-finger {
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.35;
+}
+
+/* Highlighted hand finger styling */
+.finger-active-left {
+  stroke: var(--finger-left) !important;
+  stroke-width: 5px !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 4px var(--finger-left));
+}
+
+.finger-active-right {
+  stroke: var(--finger-right) !important;
+  stroke-width: 5px !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 4px var(--finger-right));
+}
+
+.hand-label {
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

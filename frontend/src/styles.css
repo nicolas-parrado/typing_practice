@@ -1,0 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700&display=swap');
+
+/* --- DESIGN SYSTEM & THEMES --- */
+
+/* Theme 1: Sleek Dark Glassmorphism (Default) */
+:root {
+  --bg-gradient: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+  --bg-panel: rgba(15, 23, 42, 0.45);
+  --border-panel: rgba(255, 255, 255, 0.08);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-glow: rgba(99, 102, 241, 0.4);
+  --error: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.15);
+  --success: #10b981;
+  --key-bg: rgba(30, 41, 59, 0.7);
+  --key-text: #e2e8f0;
+  --key-border: rgba(255, 255, 255, 0.05);
+  --finger-left: #38bdf8;
+  --finger-right: #f43f5e;
+  --font-display: 'Outfit', sans-serif;
+  --font-text: 'Inter', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+  --backdrop-blur: blur(16px);
+  --shadow-panel: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glow-effect: none;
+  --border-radius: 16px;
+}
+
+/* Theme 2: Cyberpunk Neon */
+.theme-cyberpunk {
+  --bg-gradient: linear-gradient(135deg, #0d0c1d 0%, #1a0826 100%);
+  --bg-panel: rgba(26, 8, 38, 0.75);
+  --border-panel: #ff007f;
+  --text-primary: #00f0ff;
+  --text-secondary: #b500ff;
+  --accent: #ff007f;
+  --accent-hover: #ff3399;
+  --accent-glow: rgba(255, 0, 127, 0.6);
+  --error: #ff0055;
+  --error-bg: rgba(255, 0, 85, 0.2);
+  --success: #39ff14;
+  --key-bg: #120421;
+  --key-text: #00f0ff;
+  --key-border: #b500ff;
+  --finger-left: #00f0ff;
+  --finger-right: #ff007f;
+  --backdrop-blur: blur(10px);
+  --shadow-panel: 0 0 15px rgba(255, 0, 127, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.1);
+  --glow-effect: drop-shadow(0 0 5px var(--accent)) drop-shadow(0 0 10px var(--accent));
+  --border-radius: 4px;
+}
+
+/* Theme 3: Retro Terminal / Matrix */
+.theme-terminal {
+  --bg-gradient: linear-gradient(180deg, #020202 0%, #080a08 100%);
+  --bg-panel: #040804;
+  --border-panel: #00ff00;
+  --text-primary: #00ff00;
+  --text-secondary: #008800;
+  --accent: #00ff00;
+  --accent-hover: #00cc00;
+  --accent-glow: rgba(0, 255, 0, 0.5);
+  --error: #ff0000;
+  --error-bg: rgba(255, 0, 0, 0.2);
+  --success: #00ff00;
+  --key-bg: #010401;
+  --key-text: #00dd00;
+  --key-border: #00aa00;
+  --finger-left: #00ff00;
+  --finger-right: #00ff00;
+  --font-display: 'Fira Code', monospace;
+  --font-text: 'Fira Code', monospace;
+  --font-mono: 'Fira Code', monospace;
+  --backdrop-blur: none;
+  --shadow-panel: 0 0 10px rgba(0, 255, 0, 0.2);
+  --glow-effect: text-shadow: 0 0 4px #00ff00;
+  --border-radius: 2px;
+}
+
+/* --- BASE STYLES --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+body {
+  font-family: var(--font-text);
+  color: var(--text-primary);
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--key-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* --- REUSABLE COMPONENTS & GLASS UI --- */
+.glass-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-panel);
+  border-radius: var(--border-radius);
+  padding: 24px;
+}
+
+.title-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-family: var(--font-display);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--key-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--key-border);
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-family: var(--font-display);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+}
+
+/* Keypress Particle Animation container */
+.particle-container {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: explode 0.4s ease-out forwards;
+}
+
+@keyframes explode {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.2);
+    opacity: 0;
+  }
+}

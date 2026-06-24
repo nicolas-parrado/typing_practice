@@ -1,0 +1,119 @@
+<div class="keyboard-container glass-panel">
+  <!-- Virtual Keyboard Rows -->
+  <div class="keyboard-grid">
+    <!-- Row 1 -->
+    <div class="keyboard-row">
+      @for (key of row1; track key.code) {
+        <div class="key" 
+             [ngClass]="[key.widthClass || '', isKeyHighlighted(key) ? 'key-active' : '', isModifierHighlighted(key.code) ? 'key-modifier-active' : '']"
+             [attr.data-finger]="key.finger">
+          <span class="key-shift">{{ key.shiftLabel }}</span>
+          <span class="key-main">{{ key.label }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Row 2 -->
+    <div class="keyboard-row">
+      @for (key of row2; track key.code) {
+        <div class="key" 
+             [ngClass]="[key.widthClass || '', isKeyHighlighted(key) ? 'key-active' : '', isModifierHighlighted(key.code) ? 'key-modifier-active' : '']"
+             [attr.data-finger]="key.finger">
+          <span class="key-shift">{{ key.shiftLabel }}</span>
+          <span class="key-main">{{ key.label }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Row 3 -->
+    <div class="keyboard-row">
+      @for (key of row3; track key.code) {
+        <div class="key" 
+             [ngClass]="[key.widthClass || '', isKeyHighlighted(key) ? 'key-active' : '', isModifierHighlighted(key.code) ? 'key-modifier-active' : '']"
+             [attr.data-finger]="key.finger">
+          <span class="key-shift">{{ key.shiftLabel }}</span>
+          <span class="key-main">{{ key.label }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Row 4 -->
+    <div class="keyboard-row">
+      @for (key of row4; track key.code) {
+        <div class="key" 
+             [ngClass]="[key.widthClass || '', isKeyHighlighted(key) ? 'key-active' : '', isModifierHighlighted(key.code) ? 'key-modifier-active' : '']"
+             [attr.data-finger]="key.finger">
+          <span class="key-shift">{{ key.shiftLabel }}</span>
+          <span class="key-main">{{ key.label }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Row 5 -->
+    <div class="keyboard-row">
+      @for (key of row5; track key.code) {
+        <div class="key" 
+             [ngClass]="[key.widthClass || '', isKeyHighlighted(key) ? 'key-active' : '', isModifierHighlighted(key.code) ? 'key-modifier-active' : '']"
+             [attr.data-finger]="key.finger">
+          <span class="key-shift">{{ key.shiftLabel }}</span>
+          <span class="key-main">{{ key.label }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Hands Guide Overlay -->
+  <div class="hands-guide">
+    <!-- Left Hand -->
+    <div class="hand-svg-container">
+      <svg viewBox="0 0 150 150" class="hand-svg" id="left-hand">
+        <path d="M75,130 C75,130 55,120 45,100 C35,80 30,60 30,60 C30,60 22,70 15,85 C8,100 15,130 35,145 C55,160 75,130 75,130 Z" class="hand-wrist" />
+        <!-- Hand palm base -->
+        <path d="M35,115 C35,115 50,75 75,70 C75,70 85,85 85,105 C85,125 55,135 35,115 Z" class="hand-palm" />
+        <!-- Fingers -->
+        <!-- Left Pinky -->
+        <path d="M25,75 C21,60 17,45 18,30 C19,25 24,25 25,30 C27,45 32,60 35,75" 
+              class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-pinky'}" />
+        <!-- Left Ring -->
+        <path d="M38,68 C35,50 33,30 36,15 C37,10 42,10 43,15 C45,30 47,50 48,68" 
+              class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-ring'}" />
+        <!-- Left Middle -->
+        <path d="M51,65 C49,45 48,23 52,8 C53,3 58,3 59,8 C61,23 62,45 61,65" 
+              class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-middle'}" />
+        <!-- Left Index -->
+        <path d="M64,66 C65,48 67,30 72,16 C73,11 78,11 77,16 C74,30 73,48 72,66" 
+              class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-index'}" />
+        <!-- Left Thumb -->
+        <path d="M78,82 C85,85 97,88 108,82 C112,80 114,85 110,88 C98,98 85,95 78,88" 
+              class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-thumb' || activeFinger === 'thumb'}" />
+      </svg>
+      <span class="hand-label">Mano Izquierda</span>
+    </div>
+
+    <!-- Right Hand -->
+    <div class="hand-svg-container">
+      <svg viewBox="0 0 150 150" class="hand-svg" id="right-hand">
+        <path d="M75,130 C75,130 95,120 105,100 C115,80 120,60 120,60 C120,60 128,70 135,85 C142,100 135,130 115,145 C95,160 75,130 75,130 Z" class="hand-wrist" />
+        <!-- Hand palm base -->
+        <path d="M115,115 C115,115 100,75 75,70 C75,70 65,85 65,105 C65,125 95,135 115,115 Z" class="hand-palm" />
+        <!-- Fingers -->
+        <!-- Right Thumb -->
+        <path d="M72,82 C65,85 53,88 42,82 C38,80 36,85 40,88 C52,98 65,95 72,88" 
+              class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-thumb' || activeFinger === 'thumb'}" />
+        <!-- Right Index -->
+        <path d="M86,66 C85,48 83,30 78,16 C77,11 72,11 73,16 C76,30 77,48 78,66" 
+              class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-index'}" />
+        <!-- Right Middle -->
+        <path d="M99,65 C101,45 102,23 98,8 C97,3 92,3 91,8 C89,23 88,45 89,65" 
+              class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-middle'}" />
+        <!-- Right Ring -->
+        <path d="M112,68 C115,50 117,30 114,15 C113,10 108,10 107,15 C105,30 103,50 102,68" 
+              class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-ring'}" />
+        <!-- Right Pinky -->
+        <path d="M125,75 C129,60 133,45 132,30 C131,25 126,25 125,30 C123,45 118,60 115,75" 
+              class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-pinky'}" />
+      </svg>
+      <span class="hand-label">Mano Derecha</span>
+    </div>
+  </div>
+</div>
