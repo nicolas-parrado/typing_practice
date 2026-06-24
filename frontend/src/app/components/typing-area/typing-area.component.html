@@ -16,13 +16,20 @@
         @if (mode === 'arcade') {
           <div class="info-item arcade-warning">
             <span class="label">Vidas:</span>
-            <span class="value">3 ♥</span>
+            <span class="value flex-align">
+              3
+              <svg class="svg-icon svg-heart" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </span>
           </div>
         }
       </div>
 
       <button class="btn-primary" (click)="startTest()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
         Comenzar Práctica
       </button>
     </div>
@@ -31,6 +38,33 @@
   <!-- PLAYING SCREEN -->
   @if (isPlaying && !isFinished) {
     <div class="game-view">
+      <!-- Floating Ghost Target Indicator -->
+      <div class="ghost-target-panel glass-panel" [class.ghost-active]="hasGhostRecord">
+        <div class="ghost-header">
+          <svg class="svg-icon ghost-avatar-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>{{ hasGhostRecord ? 'Objetivo Récord Personal' : 'Objetivo Aprobación' }}</span>
+        </div>
+        <div class="ghost-metrics">
+          <div class="ghost-metric-item">
+            <span class="ghost-lbl">Velocidad:</span>
+            <span class="ghost-target-val">{{ ghostTargetWpm }} WPM</span>
+            <span class="ghost-diff" [ngClass]="{'diff-positive': ghostDiffWpm >= 0, 'diff-negative': ghostDiffWpm < 0}">
+              {{ ghostDiffWpm >= 0 ? '+' : '' }}{{ ghostDiffWpm }} WPM
+            </span>
+          </div>
+          <div class="ghost-metric-item">
+            <span class="ghost-lbl">Precisión:</span>
+            <span class="ghost-target-val">{{ ghostTargetAccuracy }}%</span>
+            <span class="ghost-diff" [ngClass]="{'diff-positive': ghostDiffAccuracy >= 0, 'diff-negative': ghostDiffAccuracy < 0}">
+              {{ ghostDiffAccuracy >= 0 ? '+' : '' }}{{ ghostDiffAccuracy }}%
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Live Stats Bar -->
       <div class="stats-bar glass-panel">
         <div class="stat-box">
@@ -47,7 +81,12 @@
         </div>
         @if (mode === 'arcade') {
           <div class="stat-box lives-box" [ngClass]="{'low-lives': arcadeLives <= 1}">
-            <span class="stat-val">{{ arcadeLives }} ♥</span>
+            <span class="stat-val flex-align">
+              {{ arcadeLives }}
+              <svg class="svg-icon svg-heart" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </span>
             <span class="stat-lbl">Vidas Restantes</span>
           </div>
         } @else {
@@ -70,7 +109,11 @@
       <!-- Sequential Dead-Key Guide -->
       @if (deadKeyActive) {
         <div class="deadkey-banner glass-panel">
-          <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
           @if (deadKeyStep === 0) {
             <span><strong>Paso 1:</strong> Presiona primero la tecla del acento/tilde: <strong>[ {{ expectedKey }} ]</strong></span>
           } @else {
@@ -99,10 +142,24 @@
   @if (isFinished) {
     <div class="results-card glass-panel">
       @if (mode === 'arcade' && arcadeLives <= 0) {
-        <h2 class="title-display failed-header">¡Game Over!</h2>
+        <h2 class="title-display failed-header">
+          <svg class="svg-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12a8 8 0 0 1 16 0c0 4.97-3.13 8.3-8 10a13 13 0 0 1-8-10z"></path>
+            <path d="M9 10a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"></path>
+            <path d="M13 10a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"></path>
+            <path d="M12 18v-4"></path>
+            <path d="M10 16h4"></path>
+          </svg>
+          ¡Game Over!
+        </h2>
         <p class="results-desc">Te quedaste sin vidas en el modo Arcade. Sigue practicando para mejorar tu precisión.</p>
       } @else {
-        <h2 class="title-display success-header">¡Excelente Trabajo!</h2>
+        <h2 class="title-display success-header">
+          <svg class="svg-icon svg-success-glow" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          ¡Excelente Trabajo!
+        </h2>
         <p class="results-desc">Has completado con éxito la lección.</p>
       }
 
@@ -136,25 +193,45 @@
           <!-- Level Up Celebration -->
           @if (saveResponse.level_up) {
             <div class="level-up-card">
-              <span class="stars">✨ ⭐ ✨</span>
+              <div class="stars-svg">
+                <svg class="svg-icon svg-star" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
               <h3>¡SUBISTE DE NIVEL!</h3>
               <p>Ahora eres <strong>Nivel {{ saveResponse.new_level }}</strong></p>
             </div>
           } @else {
             <div class="xp-progress">
               <span class="xp-tag">+{{ saveResponse.xp_gained }} XP acumulada</span>
-              <span class="streak-tag">🔥 Racha actual: {{ saveResponse.new_streak }} días</span>
+              <span class="streak-tag">
+                <svg class="svg-icon svg-fire" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                </svg>
+                Racha actual: {{ saveResponse.new_streak }} días
+              </span>
             </div>
           }
 
           <!-- New Medals Unlocked -->
           @if (saveResponse.new_achievements.length > 0) {
             <div class="medals-unlocked">
-              <h4>🏅 ¡Nuevas Medallas Desbloqueadas!</h4>
+              <h4>
+                <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="8" r="7"></circle>
+                  <path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"></path>
+                </svg>
+                ¡Nuevas Medallas Desbloqueadas!
+              </h4>
               <div class="medals-flex">
                 @for (ach of saveResponse.new_achievements; track ach) {
                   <div class="medal-badge glowing-medal">
-                    <span class="medal-icon">🥇</span>
+                    <span class="medal-icon-wrapper">
+                      <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="7"></circle>
+                        <path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"></path>
+                      </svg>
+                    </span>
                     <span class="medal-title">{{ getAchievementName(ach) }}</span>
                   </div>
                 }
@@ -166,7 +243,9 @@
 
       <div class="results-actions">
         <button class="btn-primary" (click)="resetTest()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+          <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          </svg>
           Volver a Intentar
         </button>
         <button class="btn-secondary" (click)="onFinish.emit()">

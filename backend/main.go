@@ -24,6 +24,7 @@ func main() {
 	mux.HandleFunc("GET /api/profiles", handlers.GetProfiles)
 	mux.HandleFunc("POST /api/profiles", handlers.CreateProfile)
 	mux.HandleFunc("GET /api/profiles/{id}", handlers.GetProfile)
+	mux.HandleFunc("PUT /api/profiles/{id}/settings", handlers.UpdateProfileSettings)
 	mux.HandleFunc("DELETE /api/profiles/{id}", handlers.DeleteProfile)
 
 	// Exercises & Sessions

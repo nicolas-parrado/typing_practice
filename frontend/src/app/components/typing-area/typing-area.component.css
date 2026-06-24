@@ -356,3 +356,107 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* --- ADICIONES GHOST TARGET & SVG --- */
+
+.flex-align {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Floating Ghost Target Panel */
+.ghost-target-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 20px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+}
+
+.ghost-target-panel.ghost-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.ghost-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.ghost-avatar-icon {
+  color: var(--accent);
+}
+
+.ghost-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.ghost-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghost-lbl {
+  color: var(--text-secondary);
+}
+
+.ghost-target-val {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ghost-diff {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.diff-positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+}
+
+.diff-negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--error);
+}
+
+.svg-icon {
+  display: inline-block;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+}
+
+.svg-heart {
+  color: var(--error);
+  fill: var(--error);
+}
+
+.svg-fire {
+  color: #f59e0b;
+}
+
+.svg-star {
+  color: #fbbf24;
+  fill: #fbbf24;
+}
+
+.svg-success-glow {
+  color: var(--success);
+  filter: drop-shadow(0 0 6px var(--success));
+}

@@ -111,11 +111,12 @@
 }
 
 /* Default hand aesthetics */
-.hand-wrist, .hand-palm {
+.hand-palm-outline {
   fill: none;
   stroke: var(--text-secondary);
-  stroke-width: 1.5;
-  opacity: 0.25;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  opacity: 0.22;
 }
 
 .hand-finger {
@@ -148,4 +149,11 @@
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Command keys symbols alignment & sizing */
+.w-ctrl .key-main, .w-option .key-main, .w-cmd .key-main {
+  align-self: center;
+  font-size: 1.15rem;
+  margin-top: 4px;
 }

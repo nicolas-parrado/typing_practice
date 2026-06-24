@@ -8,6 +8,9 @@ export interface Profile {
   xp?: number;
   level?: number;
   streak?: number;
+  theme?: string;
+  sound_enabled?: boolean;
+  switch_type?: string;
   last_active?: string;
   created_at?: string;
 }
@@ -19,6 +22,12 @@ export interface Exercise {
   category: string;
   difficulty: string;
   is_endurance: boolean;
+  unlocked?: boolean;
+  high_score_wpm?: number;
+  high_score_accuracy?: number;
+  arcade_wpm?: number;
+  arcade_accuracy?: number;
+  play_count?: number;
 }
 
 export interface KeyProgress {
@@ -101,15 +110,20 @@ export class ApiService {
     return this.http.get<Profile>(`${this.baseUrl}/profiles/${id}`);
   }
 
+  updateProfileSettings(profileId: number, settings: { theme: string, sound_enabled: boolean, switch_type: string }): Observable<{ result: string }> {
+    return this.http.put<{ result: string }>(`${this.baseUrl}/profiles/${profileId}/settings`, settings);
+  }
+
   deleteProfile(id: number): Observable<{ result: string }> {
     return this.http.delete<{ result: string }>(`${this.baseUrl}/profiles/${id}`);
   }
 
-  getExercises(category?: string, difficulty?: string, isEndurance?: boolean): Observable<Exercise[]> {
+  getExercises(category?: string, difficulty?: string, isEndurance?: boolean, profileId?: number): Observable<Exercise[]> {
     let params: any = {};
     if (category) params.category = category;
     if (difficulty) params.difficulty = difficulty;
     if (isEndurance !== undefined) params.is_endurance = isEndurance ? 'true' : 'false';
+    if (profileId) params.profile_id = profileId.toString();
 
     return this.http.get<Exercise[]>(`${this.baseUrl}/exercises`, { params });
   }

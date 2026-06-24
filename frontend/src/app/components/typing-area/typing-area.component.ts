@@ -90,6 +90,13 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
   errorsMap: { [index: number]: boolean } = {};
   typedHistory: string[] = [];
 
+  // Ghost / Personal Best Target Tracker
+  ghostTargetWpm = 25;
+  ghostTargetAccuracy = 90;
+  ghostDiffWpm = 0;
+  ghostDiffAccuracy = 0;
+  hasGhostRecord = false;
+
   // Key tracking
   expectedKey = '';
   expectedFinger = '';
@@ -155,6 +162,22 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.deadKeyStep = 0;
     this.isSaving = false;
     this.saveResponse = null;
+
+    // Load Ghost Target details
+    const bestWpm = this.mode === 'arcade' ? (this.exercise.arcade_wpm || 0) : (this.exercise.high_score_wpm || 0);
+    const bestAcc = this.mode === 'arcade' ? (this.exercise.arcade_accuracy || 0) : (this.exercise.high_score_accuracy || 0);
+    if (bestWpm > 0) {
+      this.ghostTargetWpm = bestWpm;
+      this.ghostTargetAccuracy = Math.round(bestAcc * 100);
+      this.hasGhostRecord = true;
+    } else {
+      this.ghostTargetWpm = 25;
+      this.ghostTargetAccuracy = 90;
+      this.hasGhostRecord = false;
+    }
+    this.ghostDiffWpm = 0;
+    this.ghostDiffAccuracy = 0;
+
     this.updateTargetKey();
   }
 
@@ -197,6 +220,10 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
 
     const totalAttempts = this.correctCharsCount + this.errorsCount;
     this.accuracy = totalAttempts > 0 ? Math.round((this.correctCharsCount / totalAttempts) * 100) : 100;
+
+    // Calculate Ghost relative comparison
+    this.ghostDiffWpm = this.wpm - this.ghostTargetWpm;
+    this.ghostDiffAccuracy = this.accuracy - this.ghostTargetAccuracy;
   }
 
   private recordKeyStart() {
@@ -533,7 +560,24 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
       streak_legend: "Leyenda de la Tropa (Racha de 365 días)",
       endurance_deity: "Deidad de Resistencia (Largo >5k, >110 WPM, >99% Precisión)",
       absolute_zen: "Zen Absoluto (20 ejercicios seguidos 100% Precisión)",
-      perfect_programmer: "Programador Perfecto (Código >800 chars, >100 WPM, 100% Precisión)"
+      perfect_programmer: "Programador Perfecto (Código >800 chars, >100 WPM, 100% Precisión)",
+      
+      // Expansion 31-45
+      master_classic_spa: "Maestría Clásica: Español (10 Lecciones Español Clásico)",
+      master_classic_eng: "Maestría Clásica: Inglés (10 Lecciones Inglés Clásico)",
+      master_classic_code: "Maestría Clásica: Código (10 Lecciones Código Clásico)",
+      master_classic_num: "Maestría Clásica: Números (10 Lecciones Números Clásico)",
+      master_classic_sym: "Maestría Clásica: Símbolos (10 Lecciones Símbolos Clásico)",
+      master_arcade_spa: "Maestría Arcade: Español (10 Lecciones Español Arcade)",
+      master_arcade_eng: "Maestría Arcade: Inglés (10 Lecciones Inglés Arcade)",
+      master_arcade_code: "Maestría Arcade: Código (10 Lecciones Código Arcade)",
+      master_arcade_num: "Maestría Arcade: Números (10 Lecciones Números Arcade)",
+      master_arcade_sym: "Maestría Arcade: Símbolos (10 Lecciones Símbolos Arcade)",
+      elite_code_speed: "Código Limpio Pro (Código >80 WPM, 100% Precisión)",
+      elite_spanish_speed: "Furia Española (Español >110 WPM)",
+      elite_english_speed: "Ciclón Inglés (Inglés >110 WPM)",
+      elite_endurance: "Resistencia de Hierro (3 Lecciones Resistencia >98% Precisión en un día)",
+      deity_tropa: "Deidad de la Tropa (Desbloqueaste 40 logros)"
     };
     return list[code] || code;
   }

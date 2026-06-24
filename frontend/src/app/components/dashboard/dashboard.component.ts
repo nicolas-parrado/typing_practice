@@ -31,13 +31,17 @@ export class DashboardComponent implements OnInit {
 
   // Active state
   activeTab: 'exercises' | 'stats' | 'retries' | 'achievements' = 'exercises';
-  selectedCategory: string = '';
+  selectedCategory: string = 'spanish'; // Default to Spanish
   selectedDifficulty: string = '';
   selectedExercise: Exercise | null = null;
   typingMode: string = 'lesson';
 
+  // Settings modal state
+  showSettingsModal = false;
+
   // Library of loaded exercises
   exercises: Exercise[] = [];
+  allExercises: Exercise[] = [];
   isLoadingExercises = false;
 
   // Stats and achievements data
@@ -46,7 +50,10 @@ export class DashboardComponent implements OnInit {
   isLoadingStats = false;
   activeTheme: string = 'glass';
 
-  // 30 Achievements catalog
+  // Category stats for speedometers
+  categoryStats: { [key: string]: { wpm: number, accuracy: number, completed: number, total: number } } = {};
+
+  // 45 Achievements catalog
   readonly achievementsCatalog: AchievementSchema[] = [
     // Simple
     { code: 'welcome', name: 'Bienvenido a la Tropa', desc: 'Crea tu primer perfil local.', tier: 'simple' },
@@ -84,7 +91,28 @@ export class DashboardComponent implements OnInit {
     { code: 'streak_legend', name: 'Leyenda de la Tropa', desc: 'Mantén una racha ininterrumpida de 365 días.', tier: 'impossible' },
     { code: 'endurance_deity', name: 'Deidad de Resistencia', desc: 'Texto >5k a >110 WPM y >99% de precisión.', tier: 'impossible' },
     { code: 'absolute_zen', name: 'Zen Absoluto', desc: 'Completa 20 ejercicios distintos seguidos al 100% de precisión.', tier: 'impossible' },
-    { code: 'perfect_programmer', name: 'Programador Perfecto', desc: 'Código >800 chars a >100 WPM con 100% de precisión.', tier: 'impossible' }
+    { code: 'perfect_programmer', name: 'Programador Perfecto', desc: 'Código >800 chars a >100 WPM con 100% de precisión.', tier: 'impossible' },
+
+    // Maestría Clásica por Categoría (Medium)
+    { code: 'master_classic_spa', name: 'Maestría Clásica: Español', desc: 'Completa 10 lecciones de español en modo clásico.', tier: 'medium' },
+    { code: 'master_classic_eng', name: 'Maestría Clásica: Inglés', desc: 'Completa 10 lecciones de inglés en modo clásico.', tier: 'medium' },
+    { code: 'master_classic_code', name: 'Maestría Clásica: Código', desc: 'Completa 10 lecciones de código en modo clásico.', tier: 'medium' },
+    { code: 'master_classic_num', name: 'Maestría Clásica: Números', desc: 'Completa 10 lecciones de números en modo clásico.', tier: 'medium' },
+    { code: 'master_classic_sym', name: 'Maestría Clásica: Símbolos', desc: 'Completa 10 lecciones de símbolos en modo clásico.', tier: 'medium' },
+
+    // Maestría Arcade por Categoría (Hard)
+    { code: 'master_arcade_spa', name: 'Maestría Arcade: Español', desc: 'Completa 10 lecciones de español en modo arcade.', tier: 'hard' },
+    { code: 'master_arcade_eng', name: 'Maestría Arcade: Inglés', desc: 'Completa 10 lecciones de inglés en modo arcade.', tier: 'hard' },
+    { code: 'master_arcade_code', name: 'Maestría Arcade: Código', desc: 'Completa 10 lecciones de código en modo arcade.', tier: 'hard' },
+    { code: 'master_arcade_num', name: 'Maestría Arcade: Números', desc: 'Completa 10 lecciones de números en modo arcade.', tier: 'hard' },
+    { code: 'master_arcade_sym', name: 'Maestría Arcade: Símbolos', desc: 'Completa 10 lecciones de símbolos en modo arcade.', tier: 'hard' },
+
+    // Élite
+    { code: 'elite_code_speed', name: 'Código Limpio Pro', desc: 'Código a más de 80 WPM con 100% de precisión.', tier: 'hard' },
+    { code: 'elite_spanish_speed', name: 'Furia Española', desc: 'Supera los 110 WPM en un ejercicio de español.', tier: 'hard' },
+    { code: 'elite_english_speed', name: 'Ciclón Inglés', desc: 'Supera los 110 WPM en un ejercicio de inglés.', tier: 'hard' },
+    { code: 'elite_endurance', name: 'Resistencia de Hierro', desc: 'Completa 3 lecciones de resistencia con >98% de precisión en un solo día.', tier: 'hard' },
+    { code: 'deity_tropa', name: 'Deidad de la Tropa', desc: 'Desbloquea al menos 40 logros.', tier: 'impossible' }
   ];
 
   ngOnInit() {
@@ -103,8 +131,16 @@ export class DashboardComponent implements OnInit {
     this.activeProfile = profile;
     this.selectedExercise = null;
     this.activeTab = 'exercises';
+    
+    // Apply profile settings
+    this.activeTheme = profile.theme || 'glass';
+    this.setTheme(this.activeTheme);
+    this.sound.soundEnabled.set(profile.sound_enabled !== undefined ? profile.sound_enabled : true);
+    this.sound.switchType.set((profile.switch_type as any) || 'blue');
+
     this.loadExercises();
     this.loadStatsAndRetries();
+    this.loadAllExercisesForStats();
   }
 
   createProfile() {
@@ -142,12 +178,13 @@ export class DashboardComponent implements OnInit {
     this.selectedExercise = null;
     this.stats = null;
     this.retries = [];
+    this.showSettingsModal = false;
   }
 
   loadExercises() {
     if (!this.activeProfile) return;
     this.isLoadingExercises = true;
-    this.api.getExercises(this.selectedCategory, this.selectedDifficulty).subscribe({
+    this.api.getExercises(this.selectedCategory, this.selectedDifficulty, undefined, this.activeProfile.id).subscribe({
       next: (data) => {
         this.exercises = data;
         this.isLoadingExercises = false;
@@ -159,10 +196,91 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  loadAllExercisesForStats() {
+    if (!this.activeProfile?.id) return;
+    this.api.getExercises(undefined, undefined, undefined, this.activeProfile.id).subscribe({
+      next: (data) => {
+        this.allExercises = data;
+        this.calculateCategoryStats();
+      },
+      error: (err) => console.error("Error loading all exercises for stats:", err)
+    });
+  }
+
+  calculateCategoryStats() {
+    const categories = ['spanish', 'english', 'code', 'numbers', 'symbols'];
+    this.categoryStats = {};
+
+    categories.forEach(cat => {
+      const catExs = this.allExercises.filter(e => e.category === cat);
+      const playedExs = catExs.filter(e => (e.high_score_wpm && e.high_score_wpm > 0) || (e.arcade_wpm && e.arcade_wpm > 0));
+
+      const totalWpm = playedExs.reduce((acc, curr) => {
+        const best = Math.max(curr.high_score_wpm || 0, curr.arcade_wpm || 0);
+        return acc + best;
+      }, 0);
+
+      const totalAcc = playedExs.reduce((acc, curr) => {
+        const best = Math.max(curr.high_score_accuracy || 0, curr.arcade_accuracy || 0);
+        return acc + best;
+      }, 0);
+
+      const completed = catExs.filter(e => {
+        const hasPassedClassic = (e.high_score_wpm || 0) >= 25 && (e.high_score_accuracy || 0) >= 0.90;
+        const hasPassedArcade = (e.arcade_wpm || 0) >= 25 && (e.arcade_accuracy || 0) >= 0.90;
+        return hasPassedClassic || hasPassedArcade;
+      }).length;
+
+      this.categoryStats[cat] = {
+        wpm: playedExs.length > 0 ? Math.round(totalWpm / playedExs.length) : 0,
+        accuracy: playedExs.length > 0 ? (totalAcc / playedExs.length) : 0,
+        completed: completed,
+        total: catExs.length
+      };
+    });
+  }
+
+  getSpeedometerOffset(wpm: number): number {
+    const maxWpm = 150;
+    const clampedWpm = Math.min(Math.max(wpm, 0), maxWpm);
+    const arcLength = 188.5; // Circular arc mapping
+    return arcLength - (arcLength * clampedWpm) / maxWpm;
+  }
+
+  getSpeedometerColor(wpm: number): string {
+    if (wpm < 30) return '#ef4444';      // Red
+    if (wpm < 70) return '#fbbf24';      // Yellow
+    if (wpm < 110) return '#10b981';     // Green
+    return '#00f0ff';                    // Cyan/Glow
+  }
+
+  getSpeedometerTier(wpm: number): string {
+    if (wpm < 30) return 'Aprendiz';
+    if (wpm < 70) return 'Intermedio';
+    if (wpm < 110) return 'Profesional';
+    return 'Leyenda';
+  }
+
+  selectCategory(category: string) {
+    this.selectedCategory = category;
+    this.loadExercises();
+  }
+
+  getCategoryName(cat: string): string {
+    const names: { [key: string]: string } = {
+      'spanish': 'Español',
+      'english': 'Inglés',
+      'code': 'Código Real',
+      'numbers': 'Números',
+      'symbols': 'Símbolos'
+    };
+    return names[cat] || cat;
+  }
+
   loadStatsAndRetries() {
     if (!this.activeProfile?.id) return;
     this.isLoadingStats = true;
-    
+
     this.api.getStats(this.activeProfile.id).subscribe({
       next: (data) => {
         this.stats = data;
@@ -180,6 +298,35 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  saveSettings() {
+    if (!this.activeProfile?.id) return;
+    const settings = {
+      theme: this.activeTheme,
+      sound_enabled: this.sound.soundEnabled(),
+      switch_type: this.sound.switchType()
+    };
+    this.api.updateProfileSettings(this.activeProfile.id, settings).subscribe({
+      next: () => {
+        if (this.activeProfile) {
+          this.activeProfile.theme = settings.theme;
+          this.activeProfile.sound_enabled = settings.sound_enabled;
+          this.activeProfile.switch_type = settings.switch_type;
+        }
+      },
+      error: (err) => console.error("Error updating settings:", err)
+    });
+  }
+
+  toggleSound() {
+    this.sound.soundEnabled.set(!this.sound.soundEnabled());
+    this.saveSettings();
+  }
+
+  changeSwitchType(type: 'blue' | 'brown' | 'typewriter') {
+    this.sound.switchType.set(type);
+    this.saveSettings();
+  }
+
   startExercise(ex: Exercise, mode: string = 'lesson') {
     this.selectedExercise = ex;
     this.typingMode = mode;
@@ -194,20 +341,17 @@ export class DashboardComponent implements OnInit {
     const ex: Exercise = {
       id: retry.exercise_id,
       title: retry.title,
-      content: '', // Will be loaded from backend or we fetch
+      content: '',
       category: retry.category,
       difficulty: retry.difficulty,
       is_endurance: false
     };
 
-    // Need to fetch details of retry exercise to get its text content
     this.api.getExercises().subscribe(list => {
-      // Find the text in the list or fallback
       const found = list.find(e => e.id === retry.exercise_id);
       if (found) {
         this.startExercise(found, 'retry');
       } else {
-        // Fallback: search DB directly
         this.startExercise({
           id: retry.exercise_id,
           title: retry.title,
@@ -220,38 +364,31 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Smart Custom Practice Generator
   startSmartPractice() {
     if (!this.activeProfile?.id || !this.stats || this.stats.weakest_keys.length === 0) return;
 
-    // Collect weakest characters
     const weakChars = this.stats.weakest_keys.map(k => k.char);
-    
-    // Generate repetition blocks and words in Spanish/English containing those characters
     const wordsPool = [
-      "entrenar", "fuerza", "guitarra", "música", "metal", "desarrollo", "mancuernas", 
+      "entrenar", "fuerza", "guitarra", "música", "metal", "desarrollo", "mancuernas",
       "backend", "tropa", "lección", "mecanografía", "ejercicio", "precisión", "velocidad",
       "pablo", "feña", "sofi", "luciano", "joyce", "niko", "computador", "teclado", "docker"
     ];
 
     let content = "";
-    // 1. Repeated drill patterns (e.g. j j k k jkj kjk)
     weakChars.forEach(char => {
       content += `${char} ${char} ${char} ${char}${char} ${char} `;
     });
     content += "\n";
 
-    // 2. Add words from pool containing at least one weak key
     const matchingWords = wordsPool.filter(w => weakChars.some(c => w.toLowerCase().includes(c.toLowerCase())));
     if (matchingWords.length > 0) {
       for (let j = 0; j < 3; j++) {
         content += matchingWords.sort(() => 0.5 - Math.random()).join(" ") + " ";
       }
     } else {
-      // Fallback drills
       content += "practica tus teclas debiles con consistencia ";
     }
-    
+
     content = content.trim();
 
     const smartExercise: Exercise = {
@@ -269,14 +406,13 @@ export class DashboardComponent implements OnInit {
   onTypingFinished() {
     this.selectedExercise = null;
     this.loadStatsAndRetries();
-    // Refresh profiles to update XP and level on header
+    this.loadAllExercisesForStats();
     this.loadProfiles();
     if (this.activeProfile?.id) {
       this.api.getProfile(this.activeProfile.id).subscribe(p => this.activeProfile = p);
     }
   }
 
-  // --- Theme Toggle Manager ---
   setTheme(theme: string) {
     this.activeTheme = theme;
     localStorage.setItem('typing_theme', theme);
@@ -286,6 +422,7 @@ export class DashboardComponent implements OnInit {
     } else if (theme === 'terminal') {
       document.body.classList.add('theme-terminal');
     }
+    this.saveSettings();
   }
 
   loadTheme() {
@@ -293,12 +430,10 @@ export class DashboardComponent implements OnInit {
     this.setTheme(saved);
   }
 
-  // Check if an achievement is unlocked
   isUnlocked(code: string): boolean {
     return this.stats?.achievements.includes(code) || false;
   }
 
-  // SVG Chart Generators helpers
   getChartPoints(): string {
     if (!this.stats || this.stats.progress_wpm.length < 2) return '';
     const points = this.stats.progress_wpm;
@@ -306,7 +441,7 @@ export class DashboardComponent implements OnInit {
     const height = 150;
     const padding = 20;
 
-    const maxWpm = Math.max(...points.map(p => p.wpm), 60); // min cap 60
+    const maxWpm = Math.max(...points.map(p => p.wpm), 60);
     const minWpm = Math.min(...points.map(p => p.wpm), 10);
 
     const xStep = (width - padding * 2) / (points.length - 1);

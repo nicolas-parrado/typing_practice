@@ -47,6 +47,9 @@ func createTables() {
 			level INTEGER DEFAULT 1,
 			streak INTEGER DEFAULT 0,
 			last_active TEXT DEFAULT '',
+			theme TEXT DEFAULT 'glass',
+			sound_enabled INTEGER DEFAULT 1,
+			switch_type TEXT DEFAULT 'blue',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);`,
 
@@ -107,4 +110,9 @@ func createTables() {
 			log.Fatalf("Error creating table: %v\nQuery: %s", err, query)
 		}
 	}
+
+	// Migrations for existing databases (ignore error if columns already exist)
+	_, _ = DB.Exec("ALTER TABLE profiles ADD COLUMN theme TEXT DEFAULT 'glass'")
+	_, _ = DB.Exec("ALTER TABLE profiles ADD COLUMN sound_enabled INTEGER DEFAULT 1")
+	_, _ = DB.Exec("ALTER TABLE profiles ADD COLUMN switch_type TEXT DEFAULT 'blue'")
 }

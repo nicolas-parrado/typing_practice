@@ -92,13 +92,13 @@ export class KeyboardComponent {
   ];
 
   readonly row5: KeyInfo[] = [
-    { code: 'ControlLeft', label: 'Control', finger: 'left-pinky', hand: 'left', widthClass: 'w-ctrl' },
-    { code: 'AltLeft', label: 'Option', finger: 'left-ring', hand: 'left', widthClass: 'w-option' },
-    { code: 'MetaLeft', label: 'Command', finger: 'left-thumb', hand: 'left', widthClass: 'w-cmd' },
+    { code: 'ControlLeft', label: '⌃', finger: 'left-pinky', hand: 'left', widthClass: 'w-ctrl' },
+    { code: 'AltLeft', label: '⌥', finger: 'left-ring', hand: 'left', widthClass: 'w-option' },
+    { code: 'MetaLeft', label: '⌘', finger: 'left-thumb', hand: 'left', widthClass: 'w-cmd' },
     { code: 'Space', label: '', finger: 'thumb', hand: 'thumb', widthClass: 'w-space' },
-    { code: 'MetaRight', label: 'Command', finger: 'right-thumb', hand: 'right', widthClass: 'w-cmd' },
-    { code: 'AltRight', label: 'AltGr', finger: 'right-ring', hand: 'right', widthClass: 'w-option' }, // AltGr for international characters
-    { code: 'ControlRight', label: 'Control', finger: 'right-pinky', hand: 'right', widthClass: 'w-ctrl' }
+    { code: 'MetaRight', label: '⌘', finger: 'right-thumb', hand: 'right', widthClass: 'w-cmd' },
+    { code: 'AltRight', label: '⌥ GR', finger: 'right-ring', hand: 'right', widthClass: 'w-option' }, // AltGr for international characters
+    { code: 'ControlRight', label: '⌃', finger: 'right-pinky', hand: 'right', widthClass: 'w-ctrl' }
   ];
 
   isKeyHighlighted(keyInfo: KeyInfo): boolean {

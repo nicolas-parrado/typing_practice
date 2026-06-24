@@ -5,12 +5,32 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sort"
 	"strings"
 	"time"
 )
 
-// SeedExercises checks if exercises table is empty and seeds 1,000 unique exercises
+type TempExercise struct {
+	Title       string
+	Content     string
+	Category    string
+	Difficulty  string
+	IsEndurance int
+}
+
+// SeedExercises checks if exercises table is empty or stale, and seeds 1,000 unique exercises progressively
 func SeedExercises(db *sql.DB) {
+	// Detect and clean old base-0 exercises (like 'spa_0' or 'eng_0')
+	var oldExists bool
+	_ = db.QueryRow("SELECT EXISTS(SELECT 1 FROM exercises WHERE id = 'spa_0' OR id = 'eng_0')").Scan(&oldExists)
+	if oldExists {
+		log.Println("Old base-0 exercises detected. Purging exercises table for fresh base-1 seeds...")
+		_, err := db.Exec("DELETE FROM exercises")
+		if err != nil {
+			log.Printf("Error purging old exercises: %v", err)
+		}
+	}
+
 	var count int
 	err := db.QueryRow("SELECT COUNT(*) FROM exercises").Scan(&count)
 	if err != nil {
@@ -22,9 +42,46 @@ func SeedExercises(db *sql.DB) {
 		return
 	}
 
-	log.Println("Seeding 1,000 unique exercises...")
+	log.Println("Generating 1,000 unique exercises in memory...")
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
+	// Seed target allocations
+	totalCode := 250
+	totalSpanish := 250
+	totalEnglish := 250
+	totalNumbers := 125
+	totalSymbols := 125
+
+	// Generate into memory first
+	var tempExercises []TempExercise
+	tempExercises = append(tempExercises, generateCodeExercises(totalCode, rng)...)
+	tempExercises = append(tempExercises, generateSpanishExercises(totalSpanish, rng)...)
+	tempExercises = append(tempExercises, generateEnglishExercises(totalEnglish, rng)...)
+	tempExercises = append(tempExercises, generateNumbersExercises(totalNumbers, rng)...)
+	tempExercises = append(tempExercises, generateSymbolsExercises(totalSymbols, rng)...)
+
+	// Group by category to sort individually
+	categorized := make(map[string][]TempExercise)
+	for _, ex := range tempExercises {
+		categorized[ex.Category] = append(categorized[ex.Category], ex)
+	}
+
+	// Helper to calculate progressive sorting scores
+	scoreDiff := func(e TempExercise) int {
+		if e.Difficulty == "easy" {
+			return 1
+		}
+		if e.Difficulty == "medium" {
+			return 2
+		}
+		// "hard"
+		if e.IsEndurance == 1 {
+			return 4
+		}
+		return 3
+	}
+
+	log.Println("Sorting and ordering exercises progressively...")
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatalf("Error starting transaction: %v", err)
@@ -36,27 +93,49 @@ func SeedExercises(db *sql.DB) {
 	}
 	defer stmt.Close()
 
-	// Seed counts
-	totalCode := 250
-	totalSpanish := 250
-	totalEnglish := 250
-	totalNumbers := 125
-	totalSymbols := 125
+	// Sort and Insert each category progressively from 1 to N
+	for cat, list := range categorized {
+		sort.Slice(list, func(i, j int) bool {
+			scoreI := scoreDiff(list[i])
+			scoreJ := scoreDiff(list[j])
+			if scoreI != scoreJ {
+				return scoreI < scoreJ
+			}
+			return len(list[i].Content) < len(list[j].Content)
+		})
 
-	// Generate Code (Go, Java, Python, SQL, Angular)
-	generateCodeExercises(stmt, totalCode, rng)
+		// Insert with progressive IDs and Titles
+		for index, ex := range list {
+			var id, finalTitle string
+			seq := index + 1 // Base 1 numbering
 
-	// Generate Spanish texts
-	generateSpanishExercises(stmt, totalSpanish, rng)
+			switch cat {
+			case "code":
+				id = fmt.Sprintf("code_%d", seq)
+				finalTitle = fmt.Sprintf("%s %d", ex.Title, seq)
+			case "spanish":
+				id = fmt.Sprintf("spa_%d", seq)
+				finalTitle = fmt.Sprintf("Español: Lección %d", seq)
+			case "english":
+				id = fmt.Sprintf("eng_%d", seq)
+				finalTitle = fmt.Sprintf("English: Lesson %d", seq)
+			case "numbers":
+				id = fmt.Sprintf("num_%d", seq)
+				finalTitle = fmt.Sprintf("Números: Lección %d", seq)
+			case "symbols":
+				id = fmt.Sprintf("sym_%d", seq)
+				finalTitle = fmt.Sprintf("Símbolos: Lección %d", seq)
+			default:
+				id = fmt.Sprintf("ex_%s_%d", cat, seq)
+				finalTitle = fmt.Sprintf("Lección %d", seq)
+			}
 
-	// Generate English texts
-	generateEnglishExercises(stmt, totalEnglish, rng)
-
-	// Generate Numbers
-	generateNumbersExercises(stmt, totalNumbers, rng)
-
-	// Generate Symbols
-	generateSymbolsExercises(stmt, totalSymbols, rng)
+			_, err = stmt.Exec(id, finalTitle, ex.Content, ex.Category, ex.Difficulty, ex.IsEndurance)
+			if err != nil {
+				log.Fatalf("Error inserting exercise %s: %v", id, err)
+			}
+		}
+	}
 
 	if err := tx.Commit(); err != nil {
 		log.Fatalf("Error committing transaction: %v", err)
@@ -64,7 +143,7 @@ func SeedExercises(db *sql.DB) {
 
 	var newCount int
 	db.QueryRow("SELECT COUNT(*) FROM exercises").Scan(&newCount)
-	log.Printf("Successfully seeded %d exercises in database", newCount)
+	log.Printf("Successfully seeded %d progressive exercises (Base-1) in database", newCount)
 }
 
 // Variables for generation
@@ -79,7 +158,8 @@ var (
 	fitnessTerms = []string{"hipertrofia", "barra de 30kg", "mancuernas ajustables", "fuerza máxima", "volumen de entrenamiento"}
 )
 
-func generateCodeExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
+func generateCodeExercises(count int, rng *rand.Rand) []TempExercise {
+	var list []TempExercise
 	for i := 0; i < count; i++ {
 		lang := languages[rng.Intn(len(languages))]
 		var content, title, difficulty string
@@ -109,7 +189,7 @@ func generateCodeExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
 
 		switch lang {
 		case "Golang":
-			title = fmt.Sprintf("Go: %s %d", st, i)
+			title = fmt.Sprintf("Go: %s", st)
 			if isEndurance == 1 {
 				content = fmt.Sprintf(`package main
 
@@ -165,7 +245,7 @@ func main() {
 			}
 
 		case "Angular":
-			title = fmt.Sprintf("Angular TS: %sComponent %d", st, i)
+			title = fmt.Sprintf("Angular TS: %sComponent", st)
 			if isEndurance == 1 {
 				content = fmt.Sprintf(`import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -212,7 +292,7 @@ export class %sComponent implements OnInit {
 			}
 
 		case "Java":
-			title = fmt.Sprintf("Java: %sService %d", st, i)
+			title = fmt.Sprintf("Java: %sService", st)
 			if isEndurance == 1 {
 				content = fmt.Sprintf(`package com.latropa.typing.service;
 
@@ -258,7 +338,7 @@ public class %sService {
 			}
 
 		case "Python":
-			title = fmt.Sprintf("Python: %s %d", fn, i)
+			title = fmt.Sprintf("Python: %s", fn)
 			if isEndurance == 1 {
 				content = fmt.Sprintf(`import asyncio
 import logging
@@ -302,7 +382,7 @@ async def main():
 			}
 
 		case "SQL":
-			title = fmt.Sprintf("SQL Query %d", i)
+			title = "SQL Query"
 			if isEndurance == 1 {
 				content = fmt.Sprintf(`-- Complex Reporting Query for %s
 WITH session_aggregates AS (
@@ -349,12 +429,19 @@ HAVING AVG(s.accuracy) > 0.95;`, i%30+1)
 			}
 		}
 
-		id := fmt.Sprintf("code_%s_%d", strings.ToLower(lang), i)
-		stmt.Exec(id, title, content, "code", difficulty, isEndurance)
+		list = append(list, TempExercise{
+			Title:       title,
+			Content:     content,
+			Category:    "code",
+			Difficulty:  difficulty,
+			IsEndurance: isEndurance,
+		})
 	}
+	return list
 }
 
-func generateSpanishExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
+func generateSpanishExercises(count int, rng *rand.Rand) []TempExercise {
+	var list []TempExercise
 	templates := []string{
 		"La práctica constante en la %s es vital para desarrollar memoria muscular. Tocar la %s requiere coordinación similar a programar en %s.",
 		"En la familia %s, el orden y la paciencia son claves. Mantener una racha diaria de %s nos ayuda a todos a concentrarnos mejor y divertirnos.",
@@ -388,7 +475,6 @@ func generateSpanishExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
 		fit := fitnessTerms[rng.Intn(len(fitnessTerms))]
 
 		if isEndurance == 1 {
-			// Long coherent text
 			content.WriteString("Prueba de resistencia en Español. ")
 			content.WriteString(fmt.Sprintf("Hoy hablaremos sobre %s y cómo se relaciona con el desarrollo de software moderno. ", topic))
 			content.WriteString(fmt.Sprintf("Cuando tocamos un solo rápido con la guitarra %s, nuestro cerebro no piensa en notas individuales, sino en patrones motores. ", instrument))
@@ -409,13 +495,19 @@ func generateSpanishExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
 			}
 		}
 
-		id := fmt.Sprintf("spa_%d", i)
-		title := fmt.Sprintf("Español: Lección %d", i)
-		stmt.Exec(id, title, content.String(), "spanish", difficulty, isEndurance)
+		list = append(list, TempExercise{
+			Title:       "Español: Lección",
+			Content:     content.String(),
+			Category:    "spanish",
+			Difficulty:  difficulty,
+			IsEndurance: isEndurance,
+		})
 	}
+	return list
 }
 
-func generateEnglishExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
+func generateEnglishExercises(count int, rng *rand.Rand) []TempExercise {
+	var list []TempExercise
 	templates := []string{
 		"Regular practice in %s helps to build accurate finger patterns. Playing the riff from Megadeth requires high speed and precision.",
 		"In the big family house, managing tasks is like organizing code in %s. Consistency is what keeps the daily streak going.",
@@ -449,7 +541,6 @@ func generateEnglishExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
 		fit := fitnessTerms[rng.Intn(len(fitnessTerms))]
 
 		if isEndurance == 1 {
-			// Long coherent text in English
 			content.WriteString("English Endurance typing test. ")
 			content.WriteString(fmt.Sprintf("Let us discuss the synergy between %s and software engineering principles. ", topic))
 			content.WriteString(fmt.Sprintf("When performing a complex musical piece on a %s, the guitarist relies entirely on motor memory. ", instrument))
@@ -471,13 +562,19 @@ func generateEnglishExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
 			}
 		}
 
-		id := fmt.Sprintf("eng_%d", i)
-		title := fmt.Sprintf("English: Lesson %d", i)
-		stmt.Exec(id, title, content.String(), "english", difficulty, isEndurance)
+		list = append(list, TempExercise{
+			Title:       "English: Lesson",
+			Content:     content.String(),
+			Category:    "english",
+			Difficulty:  difficulty,
+			IsEndurance: isEndurance,
+		})
 	}
+	return list
 }
 
-func generateNumbersExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
+func generateNumbersExercises(count int, rng *rand.Rand) []TempExercise {
+	var list []TempExercise
 	for i := 0; i < count; i++ {
 		var difficulty string
 		if i%3 == 0 {
@@ -491,33 +588,34 @@ func generateNumbersExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
 		var content string
 		switch i % 5 {
 		case 0:
-			// IP addresses & ports
 			content = fmt.Sprintf("192.168.1.%d, 10.0.0.%d:8080, 127.0.0.1:8081, 8.8.8.8, 1.1.1.1, %d.%d.%d.%d",
 				rng.Intn(254)+1, rng.Intn(254)+1, rng.Intn(223)+1, rng.Intn(255), rng.Intn(255), rng.Intn(254)+1)
 		case 1:
-			// Dates and phone numbers
 			content = fmt.Sprintf("2026-06-24, +56 9 9%d%d %d%d%d%d, 1984-11-23, 2018-12-07, 41 years old, family of 6",
 				rng.Intn(9), rng.Intn(9), rng.Intn(9), rng.Intn(9), rng.Intn(9), rng.Intn(9))
 		case 2:
-			// Matrix of numbers (like database keys or rows)
 			content = fmt.Sprintf("ID: %d00%d, Code: %d, XP: %d, Levels: 1 to 5, Streaks: %d days, weight: 30kg, 150W",
 				rng.Intn(9)+1, rng.Intn(9), rng.Intn(900)+100, rng.Intn(5000)+1000, rng.Intn(30)+5)
 		case 3:
-			// Math formulas
 			content = fmt.Sprintf("f(x) = %d*x^2 + %d*x - %d; y = %d / (%d + x); 3.14159 * r^2; 100%% accuracy",
 				rng.Intn(9)+1, rng.Intn(9)+1, rng.Intn(20), rng.Intn(50), rng.Intn(5)+1)
 		case 4:
-			// Random phone/ID hashes
 			content = fmt.Sprintf("9876543210 0123456789 555-019%d 8080 8081 30 7 207 150 13 14 7 7", rng.Intn(9))
 		}
 
-		id := fmt.Sprintf("num_%d", i)
-		title := fmt.Sprintf("Números: Lección %d", i)
-		stmt.Exec(id, title, content, "numbers", difficulty, 0)
+		list = append(list, TempExercise{
+			Title:       "Números: Lección",
+			Content:     content,
+			Category:    "numbers",
+			Difficulty:  difficulty,
+			IsEndurance: 0,
+		})
 	}
+	return list
 }
 
-func generateSymbolsExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
+func generateSymbolsExercises(count int, rng *rand.Rand) []TempExercise {
+	var list []TempExercise
 	for i := 0; i < count; i++ {
 		var difficulty string
 		if i%3 == 0 {
@@ -531,26 +629,26 @@ func generateSymbolsExercises(stmt *sql.Stmt, count int, rng *rand.Rand) {
 		var content string
 		switch i % 5 {
 		case 0:
-			// Brackets, quotes, operators
 			content = `if (a && b) { return c ? "yes" : "no"; } else if (a || !d) { print("error!"); }`
 		case 1:
-			// JSON format
 			content = `{"status": 200, "data": {"user_id": 104, "metrics": [0.4, 0.98], "ok": true}}`
 		case 2:
-			// Complex symbol strings
 			content = `!@#$%^&*()_+ -={}|[]\:";'<>?,./ ~` + "`" + ` § ±`
 		case 3:
-			// HTML tags & variables
 			content = `<div class="container" id="kbd-overlay"> <span *ngIf="key() === '\''"> {{ key }} </span> </div>`
 		case 4:
-			// Pointer and channel ops
 			content = `ch <- &User{Name: "Niko", XP: &xpVal}; val := <-ch; ptr := *val;`
 		}
 
-		id := fmt.Sprintf("sym_%d", i)
-		title := fmt.Sprintf("Símbolos: Lección %d", i)
-		stmt.Exec(id, title, content, "symbols", difficulty, 0)
+		list = append(list, TempExercise{
+			Title:       "Símbolos: Lección",
+			Content:     content,
+			Category:    "symbols",
+			Difficulty:  difficulty,
+			IsEndurance: 0,
+		})
 	}
+	return list
 }
 
 func getDefaultTSValue(tp string) string {

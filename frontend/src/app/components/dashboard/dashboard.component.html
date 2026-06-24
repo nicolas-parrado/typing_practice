@@ -11,15 +11,30 @@
         <div class="profiles-grid">
           @for (prof of profiles; track prof.id) {
             <div class="profile-card glass-panel" (click)="selectProfile(prof)">
-              <div class="avatar">👤</div>
+              <div class="avatar">
+                <svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
               <h3>{{ prof.name }}</h3>
               <div class="prof-stats">
                 <span>Nivel {{ prof.level }}</span>
                 @if (prof.streak !== undefined && prof.streak > 0) {
-                  <span class="streak-badge">🔥 {{ prof.streak }} días</span>
+                  <span class="streak-badge">
+                    <svg class="svg-icon svg-fire" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                    </svg>
+                    {{ prof.streak }} días
+                  </span>
                 }
               </div>
-              <button class="delete-btn" (click)="deleteProfile(prof.id!, $event)" title="Eliminar Perfil">×</button>
+              <button class="delete-btn" (click)="deleteProfile(prof.id!, $event)" title="Eliminar Perfil">
+                <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           }
         </div>
@@ -61,62 +76,31 @@
           </div>
         </div>
         @if (activeProfile.streak !== undefined && activeProfile.streak > 0) {
-          <span class="streak-indicator">🔥 Racha: {{ activeProfile.streak }} días</span>
+          <span class="streak-indicator">
+            <svg class="svg-icon svg-fire" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+            </svg>
+            Racha: {{ activeProfile.streak }} días
+          </span>
         }
+        <!-- Settings Gear Icon Button -->
+        <button class="icon-btn settings-gear-btn" (click)="showSettingsModal = true" title="Configuraciones">
+          <svg class="svg-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
         <button class="btn-secondary logout-btn" (click)="logout()">Cambiar Perfil</button>
       </div>
     </header>
 
-    <div class="main-body">
-      <!-- SIDEBAR CONTROLS -->
-      <aside class="sidebar glass-panel">
-        <div class="settings-section">
-          <h3>Estilo Visual</h3>
-          <div class="theme-buttons">
-            <button [class.active-theme]="activeTheme === 'glass'" (click)="setTheme('glass')">Glassmorphism</button>
-            <button [class.active-theme]="activeTheme === 'cyberpunk'" (click)="setTheme('cyberpunk')">Cyberpunk</button>
-            <button [class.active-theme]="activeTheme === 'terminal'" (click)="setTheme('terminal')">Terminal</button>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Sonidos de Teclas</h3>
-          <div class="sound-toggle">
-            <label class="switch-label">
-              <input type="checkbox" [checked]="sound.soundEnabled()" (change)="sound.soundEnabled.set(!sound.soundEnabled())" />
-              Efectos de Sonido
-            </label>
-          </div>
-          
-          @if (sound.soundEnabled()) {
-            <div class="switch-selector">
-              <label>Switch Mecánico:</label>
-              <select [ngModel]="sound.switchType()" (ngModelChange)="sound.switchType.set($event)">
-                <option value="blue">Cherry MX Blue (Ruidoso)</option>
-                <option value="brown">Cherry MX Brown (Táctil)</option>
-                <option value="typewriter">Máquina de Escribir (Retro)</option>
-              </select>
-            </div>
-          }
-        </div>
-
-        @if (stats && stats.weakest_keys.length > 0) {
-          <div class="smart-drill-section">
-            <h3>Práctica Inteligente</h3>
-            <p>Se ha detectado dificultades con las teclas: <strong>{{ getWeakestKeysString() }}</strong></p>
-            <button class="btn-primary smart-drill-btn" (click)="startSmartPractice()">
-              🎯 Entrenar Debilidades
-            </button>
-          </div>
-        }
-      </aside>
-
+    <div class="main-body full-width-body">
       <!-- MAIN CONTENT PANEL -->
       <main class="content-panel">
         <!-- NAVIGATION TABS -->
         <nav class="content-tabs glass-panel">
           <button [class.active-tab]="activeTab === 'exercises'" (click)="activeTab = 'exercises'">Lecciones</button>
-          <button [class.active-tab]="activeTab === 'stats'" (click)="activeTab = 'stats'; loadStatsAndRetries()">Estadísticas</button>
+          <button [class.active-tab]="activeTab === 'stats'" (click)="activeTab = 'stats'; loadStatsAndRetries(); loadAllExercisesForStats()">Estadísticas</button>
           <button [class.active-tab]="activeTab === 'retries'" (click)="activeTab = 'retries'; loadStatsAndRetries()">
             Reintentos @if (retries.length > 0) { <span class="badge">{{ retries.length }}</span> }
           </button>
@@ -126,29 +110,36 @@
         <!-- TAB CONTENT: EXERCISES -->
         @if (activeTab === 'exercises') {
           <div class="tab-pane exercises-pane">
-            <div class="filters glass-panel">
-              <div class="filter-group">
-                <label>Categoría:</label>
-                <select [(ngModel)]="selectedCategory" (change)="loadExercises()">
-                  <option value="">Todas</option>
-                  <option value="spanish">Español</option>
-                  <option value="english">Inglés</option>
-                  <option value="code">Código Real</option>
-                  <option value="numbers">Números</option>
-                  <option value="symbols">Símbolos</option>
-                </select>
-              </div>
-
-              <div class="filter-group">
-                <label>Dificultad:</label>
-                <select [(ngModel)]="selectedDifficulty" (change)="loadExercises()">
-                  <option value="">Todas</option>
-                  <option value="easy">Fácil</option>
-                  <option value="medium">Media</option>
-                  <option value="hard">Difícil</option>
-                </select>
-              </div>
+            <!-- CATEGORY SELECTOR (TABS) -->
+            <div class="category-tabs glass-panel">
+              <button [class.active-cat]="selectedCategory === 'spanish'" (click)="selectCategory('spanish')">Español</button>
+              <button [class.active-cat]="selectedCategory === 'english'" (click)="selectCategory('english')">Inglés</button>
+              <button [class.active-cat]="selectedCategory === 'code'" (click)="selectCategory('code')">Código Real</button>
+              <button [class.active-cat]="selectedCategory === 'numbers'" (click)="selectCategory('numbers')">Números</button>
+              <button [class.active-cat]="selectedCategory === 'symbols'" (click)="selectCategory('symbols')">Símbolos</button>
             </div>
+
+            <!-- SMART PRACTICE DRILL BANNER (If weak keys exist) -->
+            @if (stats && stats.weakest_keys.length > 0) {
+              <div class="smart-drill-banner glass-panel">
+                <div class="drill-info">
+                  <div class="drill-icon">
+                    <svg class="svg-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <circle cx="12" cy="12" r="6"></circle>
+                      <circle cx="12" cy="12" r="2"></circle>
+                    </svg>
+                  </div>
+                  <div class="drill-text">
+                    <h3>Práctica Inteligente Encontrada</h3>
+                    <p>Detectamos dificultades en las teclas: <strong class="accent-text">{{ getWeakestKeysString() }}</strong>. Generamos un entrenamiento dinámico para dominarlas.</p>
+                  </div>
+                </div>
+                <button class="btn-primary smart-drill-btn" (click)="startSmartPractice()">
+                  Entrenar Debilidades
+                </button>
+              </div>
+            }
 
             @if (isLoadingExercises) {
               <div class="pane-loader">
@@ -158,19 +149,73 @@
             } @else {
               <div class="exercises-grid">
                 @for (ex of exercises; track ex.id) {
-                  <div class="exercise-card glass-panel" [class.endurance-card]="ex.is_endurance">
+                  <div class="exercise-card glass-panel" [class.endurance-card]="ex.is_endurance" [class.locked-card]="!ex.unlocked">
+                    
                     @if (ex.is_endurance) {
-                      <span class="endurance-tag">RESISTENCIA ⚡</span>
+                      <span class="endurance-tag">
+                        <svg class="svg-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                        RESISTENCIA
+                      </span>
                     }
-                    <span class="card-category">{{ ex.category | uppercase }}</span>
+
+                    <div class="card-header-row">
+                      <span class="card-category">{{ ex.category | uppercase }}</span>
+                      @if (!ex.unlocked) {
+                        <span class="lock-indicator" title="Completa el nivel anterior con >= 90% precisión y >= 25 WPM para desbloquear.">
+                          <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                          </svg>
+                        </span>
+                      }
+                    </div>
+
                     <h3>{{ ex.title }}</h3>
+                    
                     <div class="card-meta">
                       <span>Dificultad: <strong>{{ ex.difficulty }}</strong></span>
-                      <span>Longitud: <strong>{{ ex.content.length }} caracteres</strong></span>
+                      <span>Longitud: <strong>{{ ex.content.length }} chars</strong></span>
                     </div>
+
+                    <!-- Personal Best High Scores -->
+                    <div class="card-scores">
+                      <div class="score-row">
+                        <span class="score-label">Récord Clásico:</span>
+                        <span class="score-val">
+                          @if (ex.high_score_wpm && ex.high_score_wpm > 0) {
+                            {{ ex.high_score_wpm | number:'1.0-0' }} WPM / {{ (ex.high_score_accuracy || 0) * 100 | number:'1.0-0' }}%
+                          } @else {
+                            No Jugado
+                          }
+                        </span>
+                      </div>
+                      <div class="score-row">
+                        <span class="score-label">Récord Arcade:</span>
+                        <span class="score-val">
+                          @if (ex.arcade_wpm && ex.arcade_wpm > 0) {
+                            {{ ex.arcade_wpm | number:'1.0-0' }} WPM / {{ (ex.arcade_accuracy || 0) * 100 | number:'1.0-0' }}%
+                          } @else {
+                            No Jugado
+                          }
+                        </span>
+                      </div>
+                    </div>
+
                     <div class="card-actions">
-                      <button class="btn-primary" (click)="startExercise(ex)">Clásico</button>
-                      <button class="btn-secondary arcade-btn" (click)="startArcadeMode(ex)" title="Practica con 3 vidas">Arcade 3♥</button>
+                      <button class="btn-primary" [disabled]="!ex.unlocked" (click)="startExercise(ex)">
+                        <svg class="svg-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Clásico
+                      </button>
+                      <button class="btn-secondary arcade-btn" [disabled]="!ex.unlocked" (click)="startArcadeMode(ex)" title="Practica con 3 vidas">
+                        <svg class="svg-icon svg-heart" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        Arcade
+                      </button>
                     </div>
                   </div>
                 }
@@ -188,6 +233,47 @@
                 <span>Cargando estadísticas de usuario...</span>
               </div>
             } @else {
+              <!-- CATEGORY SPEEDOMETERS (5 GAUGE DIALS) -->
+              <h3 class="section-title">Rendimiento por Categoría</h3>
+              <div class="speedometers-container">
+                @for (cat of ['spanish', 'english', 'code', 'numbers', 'symbols']; track cat) {
+                  <div class="category-speedometer glass-panel">
+                    <div class="speedometer-svg-wrapper">
+                      <svg class="speedometer-dial" viewBox="0 0 160 100">
+                        <!-- Background arc -->
+                        <path class="dial-bg" d="M 20 80 A 60 60 0 0 1 140 80" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12" stroke-linecap="round" />
+                        <!-- Value arc -->
+                        <path class="dial-val" d="M 20 80 A 60 60 0 0 1 140 80" fill="none" 
+                              [attr.stroke]="getSpeedometerColor(categoryStats[cat]?.wpm || 0)" 
+                              stroke-width="12" stroke-linecap="round"
+                              stroke-dasharray="188.5"
+                              [attr.stroke-dashoffset]="getSpeedometerOffset(categoryStats[cat]?.wpm || 0)" />
+                        <!-- Centered speed values -->
+                        <text x="80" y="72" class="dial-text-wpm" text-anchor="middle" fill="currentColor">{{ categoryStats[cat]?.wpm || 0 }}</text>
+                        <text x="80" y="86" class="dial-text-label" text-anchor="middle" fill="rgba(255,255,255,0.4)">WPM</text>
+                      </svg>
+                    </div>
+                    <div class="speedometer-info">
+                      <h4>{{ getCategoryName(cat) }}</h4>
+                      <p class="speedometer-meta">
+                        Precisión: {{ (categoryStats[cat]?.accuracy || 0) * 100 | number:'1.0-0' }}%
+                      </p>
+                      <p class="speedometer-tier" [style.color]="getSpeedometerColor(categoryStats[cat]?.wpm || 0)">
+                        {{ getSpeedometerTier(categoryStats[cat]?.wpm || 0) }}
+                      </p>
+                      <div class="speedometer-progress">
+                        <div class="progress-bar-container">
+                          <div class="progress-bar" [style.width.%]="((categoryStats[cat]?.completed || 0) / (categoryStats[cat]?.total || 1)) * 100"></div>
+                        </div>
+                        <span class="progress-text">{{ categoryStats[cat]?.completed || 0 }} / {{ categoryStats[cat]?.total || 0 }} lecciones</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- GLOBAL STATS OVERVIEW -->
+              <h3 class="section-title">Resumen Global</h3>
               <div class="stats-overview">
                 <div class="stat-card-micro">
                   <span class="value">{{ stats.total_sessions }}</span>
@@ -257,7 +343,12 @@
           <div class="tab-pane retries-pane">
             @if (retries.length === 0) {
               <div class="empty-state glass-panel">
-                <span class="empty-icon">🎉</span>
+                <span class="empty-icon">
+                  <svg class="svg-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </span>
                 <h3>¡Todo al día!</h3>
                 <p>No tienes lecciones pendientes por debajo del 90% de precisión.</p>
               </div>
@@ -285,20 +376,43 @@
         @if (activeTab === 'achievements') {
           <div class="tab-pane achievements-pane glass-panel">
             <h3 class="pane-title">Colección de Medallas</h3>
-            <p class="pane-desc">Desbloquea logros practicando a diario. Tienes <strong>{{ stats?.achievements?.length || 0 }}/30</strong> medallas conseguidas.</p>
+            <p class="pane-desc">Desbloquea logros practicando a diario. Tienes <strong>{{ stats?.achievements?.length || 0 }}/45</strong> medallas conseguidas.</p>
 
             <div class="achievements-grid">
               @for (ach of achievementsCatalog; track ach.code) {
                 <div class="achievement-tile" [class.unlocked]="isUnlocked(ach.code)" [attr.data-tier]="ach.tier">
                   <div class="ach-icon-box">
                     @if (ach.tier === 'impossible') {
-                      <span class="ach-icon">💀</span>
+                      <!-- Skull icon SVG -->
+                      <svg class="svg-icon svg-tier-impossible" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12a8 8 0 0 1 16 0c0 4.97-3.13 8.3-8 10a13 13 0 0 1-8-10z"></path>
+                        <path d="M9 10a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"></path>
+                        <path d="M13 10a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"></path>
+                        <path d="M12 18v-4"></path>
+                        <path d="M10 16h4"></path>
+                      </svg>
                     } @else if (ach.tier === 'hard') {
-                      <span class="ach-icon">💎</span>
+                      <!-- Diamond icon SVG -->
+                      <svg class="svg-icon svg-tier-hard" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 3h12l4 6-10 12L2 9z"></path>
+                        <path d="M11 3 8 9l4 12 4-12-3-6"></path>
+                        <path d="M2 9h20"></path>
+                      </svg>
                     } @else if (ach.tier === 'medium') {
-                      <span class="ach-icon">🏅</span>
+                      <!-- Medal icon SVG -->
+                      <svg class="svg-icon svg-tier-medium" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="7"></circle>
+                        <path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12"></path>
+                      </svg>
                     } @else {
-                      <span class="ach-icon">🥉</span>
+                      <!-- Cup icon SVG -->
+                      <svg class="svg-icon svg-tier-simple" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                        <path d="M4 22h16"></path>
+                        <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"></path>
+                        <path d="M12 2a7 7 0 0 1 7 7c0 2.47-1.19 4.36-3.13 5.34A2 2 0 0 1 14 16.1v.9c0 .55-.45 1-1 1h-2c-.55 0-1-.45-1-1v-.9a2 2 0 0 1-1.87-1.76C6.19 13.36 5 11.47 5 9a7 7 0 0 1 7-7z"></path>
+                      </svg>
                     }
                   </div>
                   <div class="ach-info">
@@ -306,7 +420,11 @@
                     <p>{{ ach.desc }}</p>
                   </div>
                   @if (isUnlocked(ach.code)) {
-                    <span class="unlocked-check">✓</span>
+                    <span class="unlocked-check-wrapper" title="Logro obtenido">
+                      <svg class="svg-icon svg-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </span>
                   }
                 </div>
               }
@@ -326,4 +444,59 @@
     [profileId]="activeProfile!.id!" 
     (onFinish)="onTypingFinished()">
   </app-typing-area>
+}
+
+<!-- SETTINGS MODAL DIALOG -->
+@if (showSettingsModal) {
+  <div class="modal-overlay">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3>Configuraciones de Usuario</h3>
+        <button class="close-modal-btn icon-btn" (click)="showSettingsModal = false">
+          <svg class="svg-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body-content">
+        <!-- Theme visual selector -->
+        <div class="settings-section">
+          <h4>Tema de Interfaz</h4>
+          <div class="theme-buttons">
+            <button [class.active-theme]="activeTheme === 'glass'" (click)="setTheme('glass')">Glassmorphism</button>
+            <button [class.active-theme]="activeTheme === 'cyberpunk'" (click)="setTheme('cyberpunk')">Cyberpunk</button>
+            <button [class.active-theme]="activeTheme === 'terminal'" (click)="setTheme('terminal')">Terminal</button>
+          </div>
+        </div>
+
+        <!-- Sound and switch preferences -->
+        <div class="settings-section">
+          <h4>Audio del Teclado</h4>
+          <div class="sound-toggle">
+            <label class="switch-label">
+              <input type="checkbox" [checked]="sound.soundEnabled()" (change)="toggleSound()" />
+              Efectos de Sonido
+            </label>
+          </div>
+          
+          @if (sound.soundEnabled()) {
+            <div class="switch-selector">
+              <label>Tipo de Switch Mecánico:</label>
+              <select [ngModel]="sound.switchType()" (ngModelChange)="changeSwitchType($event)">
+                <option value="blue">Cherry MX Blue (Ruidoso)</option>
+                <option value="brown">Cherry MX Brown (Táctil)</option>
+                <option value="typewriter">Retro Máquina de Escribir</option>
+              </select>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary" (click)="showSettingsModal = false">Aceptar</button>
+      </div>
+    </div>
+  </div>
 }

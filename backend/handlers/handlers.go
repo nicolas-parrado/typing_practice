@@ -31,7 +31,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 // GetProfiles handles GET /api/profiles
 func GetProfiles(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.DB.Query("SELECT id, name, xp, level, streak, last_active, created_at FROM profiles ORDER BY name ASC")
+	rows, err := db.DB.Query("SELECT id, name, xp, level, streak, last_active, theme, sound_enabled, switch_type, created_at FROM profiles ORDER BY name ASC")
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -42,11 +42,13 @@ func GetProfiles(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var p models.Profile
 		var createdAt string
-		err := rows.Scan(&p.ID, &p.Name, &p.XP, &p.Level, &p.Streak, &p.LastActive, &createdAt)
+		var soundEnabledVal int
+		err := rows.Scan(&p.ID, &p.Name, &p.XP, &p.Level, &p.Streak, &p.LastActive, &p.Theme, &soundEnabledVal, &p.SwitchType, &createdAt)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		p.SoundEnabled = soundEnabledVal == 1
 		p.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", strings.Split(createdAt, ".")[0])
 		profiles = append(profiles, p)
 	}
@@ -70,7 +72,7 @@ func CreateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec("INSERT INTO profiles (name, xp, level, streak, last_active) VALUES (?, 0, 1, 0, '')", p.Name)
+	res, err := db.DB.Exec("INSERT INTO profiles (name, xp, level, streak, last_active, theme, sound_enabled, switch_type) VALUES (?, 0, 1, 0, '', 'glass', 1, 'blue')", p.Name)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			respondWithError(w, http.StatusConflict, "Profile name already exists")
@@ -91,6 +93,9 @@ func CreateProfile(w http.ResponseWriter, r *http.Request) {
 	p.Level = 1
 	p.Streak = 0
 	p.LastActive = ""
+	p.Theme = "glass"
+	p.SoundEnabled = true
+	p.SwitchType = "blue"
 	p.CreatedAt = time.Now()
 
 	// Automatically unlock achievement #1: Bienvenido a la Tropa
@@ -110,8 +115,9 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	var p models.Profile
 	var createdAt string
-	err = db.DB.QueryRow("SELECT id, name, xp, level, streak, last_active, created_at FROM profiles WHERE id = ?", id).
-		Scan(&p.ID, &p.Name, &p.XP, &p.Level, &p.Streak, &p.LastActive, &createdAt)
+	var soundEnabledVal int
+	err = db.DB.QueryRow("SELECT id, name, xp, level, streak, last_active, theme, sound_enabled, switch_type, created_at FROM profiles WHERE id = ?", id).
+		Scan(&p.ID, &p.Name, &p.XP, &p.Level, &p.Streak, &p.LastActive, &p.Theme, &soundEnabledVal, &p.SwitchType, &createdAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			respondWithError(w, http.StatusNotFound, "Profile not found")
@@ -120,8 +126,47 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	p.SoundEnabled = soundEnabledVal == 1
 
 	respondWithJSON(w, http.StatusOK, p)
+}
+
+// UpdateProfileSettingsPayload represents settings update body
+type UpdateProfileSettingsPayload struct {
+	Theme        string `json:"theme"`
+	SoundEnabled bool   `json:"sound_enabled"`
+	SwitchType   string `json:"switch_type"`
+}
+
+// UpdateProfileSettings handles PUT /api/profiles/{id}/settings
+func UpdateProfileSettings(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid profile ID")
+		return
+	}
+
+	var payload UpdateProfileSettingsPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	soundVal := 0
+	if payload.SoundEnabled {
+		soundVal = 1
+	}
+
+	_, err = db.DB.Exec("UPDATE profiles SET theme = ?, sound_enabled = ?, switch_type = ? WHERE id = ?",
+		payload.Theme, soundVal, payload.SwitchType, id)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
 // DeleteProfile handles DELETE /api/profiles/{id}
@@ -147,7 +192,55 @@ func GetExercises(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 	difficulty := r.URL.Query().Get("difficulty")
 	isEnduranceStr := r.URL.Query().Get("is_endurance")
+	profileIdStr := r.URL.Query().Get("profile_id")
 
+	// 1. Fetch user scores history if profile_id is provided
+	type scoreRecord struct {
+		classicWPM float64
+		classicAcc float64
+		arcadeWPM  float64
+		arcadeAcc  float64
+		playCount  int
+		passed     bool
+	}
+	scores := make(map[string]*scoreRecord)
+
+	if profileIdStr != "" {
+		profileID, err := strconv.Atoi(profileIdStr)
+		if err == nil {
+			rows, err := db.DB.Query(`SELECT exercise_id, mode, MAX(wpm), MAX(accuracy), COUNT(id) 
+				FROM sessions WHERE profile_id = ? GROUP BY exercise_id, mode`, profileID)
+			if err == nil {
+				defer rows.Close()
+				for rows.Next() {
+					var exID, mode string
+					var wpm, acc float64
+					var count int
+					if err := rows.Scan(&exID, &mode, &wpm, &acc, &count); err == nil {
+						if _, exists := scores[exID]; !exists {
+							scores[exID] = &scoreRecord{}
+						}
+						rec := scores[exID]
+						rec.playCount += count
+						if mode == "arcade" {
+							rec.arcadeWPM = wpm
+							rec.arcadeAcc = acc
+						} else {
+							// classic / lesson
+							rec.classicWPM = wpm
+							rec.classicAcc = acc
+						}
+						// Mark passed if WPM >= 25 and Accuracy >= 90%
+						if wpm >= 25.0 && acc >= 0.90 {
+							rec.passed = true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 2. Fetch Exercises, ordered numerically/alphabetically
 	query := "SELECT id, title, content, category, difficulty, is_endurance FROM exercises WHERE 1=1"
 	args := []interface{}{}
 
@@ -168,8 +261,8 @@ func GetExercises(w http.ResponseWriter, r *http.Request) {
 		args = append(args, isEndurance)
 	}
 
-	// Limit output to prevent massive transfers, random order gives variety
-	query += " ORDER BY RANDOM() LIMIT 50"
+	// Sort numerically using the length trick
+	query += " ORDER BY length(id) ASC, id ASC"
 
 	rows, err := db.DB.Query(query, args...)
 	if err != nil {
@@ -189,6 +282,32 @@ func GetExercises(w http.ResponseWriter, r *http.Request) {
 		}
 		e.IsEndurance = (isEndInt == 1)
 		exercises = append(exercises, e)
+	}
+
+	// 3. Calculate locks and bind scores
+	previousPassed := true
+	for idx := range exercises {
+		ex := &exercises[idx]
+		exScore := scores[ex.ID]
+		if exScore != nil {
+			ex.HighScoreWPM = exScore.classicWPM
+			ex.HighScoreAccuracy = exScore.classicAcc
+			ex.ArcadeWPM = exScore.arcadeWPM
+			ex.ArcadeAccuracy = exScore.arcadeAcc
+			ex.PlayCount = exScore.playCount
+		}
+
+		if idx == 0 {
+			ex.Unlocked = true
+		} else {
+			ex.Unlocked = previousPassed
+		}
+
+		hasPassed := false
+		if exScore != nil && exScore.passed {
+			hasPassed = true
+		}
+		previousPassed = hasPassed
 	}
 
 	respondWithJSON(w, http.StatusOK, exercises)
@@ -589,6 +708,126 @@ func evaluateAchievements(profileID int, payload SaveSessionPayload, streak int)
 		WHERE s.profile_id = ? AND e.category = 'code' AND LENGTH(e.content) >= 800 AND s.wpm >= 100 AND s.accuracy = 1.0)`, profileID).Scan(&progPerfecto)
 	if progPerfecto {
 		unlock("perfect_programmer")
+	}
+
+	// --- EXPANSION: 31-45 ACHIEVEMENTS ---
+	// 31. Master Classic Spanish (at least 10 Spanish lessons in Classic mode)
+	var classicSpaCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'spanish' AND s.mode != 'arcade'`, profileID).Scan(&classicSpaCount)
+	if classicSpaCount >= 10 {
+		unlock("master_classic_spa")
+	}
+
+	// 32. Master Classic English (at least 10 English lessons in Classic mode)
+	var classicEngCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'english' AND s.mode != 'arcade'`, profileID).Scan(&classicEngCount)
+	if classicEngCount >= 10 {
+		unlock("master_classic_eng")
+	}
+
+	// 33. Master Classic Code (at least 10 Code lessons in Classic mode)
+	var classicCodeCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'code' AND s.mode != 'arcade'`, profileID).Scan(&classicCodeCount)
+	if classicCodeCount >= 10 {
+		unlock("master_classic_code")
+	}
+
+	// 34. Master Classic Numbers (at least 10 Numbers lessons in Classic mode)
+	var classicNumCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'numbers' AND s.mode != 'arcade'`, profileID).Scan(&classicNumCount)
+	if classicNumCount >= 10 {
+		unlock("master_classic_num")
+	}
+
+	// 35. Master Classic Symbols (at least 10 Symbols lessons in Classic mode)
+	var classicSymCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'symbols' AND s.mode != 'arcade'`, profileID).Scan(&classicSymCount)
+	if classicSymCount >= 10 {
+		unlock("master_classic_sym")
+	}
+
+	// 36. Master Arcade Spanish (at least 10 Spanish lessons in Arcade mode)
+	var arcadeSpaCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'spanish' AND s.mode = 'arcade'`, profileID).Scan(&arcadeSpaCount)
+	if arcadeSpaCount >= 10 {
+		unlock("master_arcade_spa")
+	}
+
+	// 37. Master Arcade English (at least 10 English lessons in Arcade mode)
+	var arcadeEngCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'english' AND s.mode = 'arcade'`, profileID).Scan(&arcadeEngCount)
+	if arcadeEngCount >= 10 {
+		unlock("master_arcade_eng")
+	}
+
+	// 38. Master Arcade Code (at least 10 Code lessons in Arcade mode)
+	var arcadeCodeCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'code' AND s.mode = 'arcade'`, profileID).Scan(&arcadeCodeCount)
+	if arcadeCodeCount >= 10 {
+		unlock("master_arcade_code")
+	}
+
+	// 39. Master Arcade Numbers (at least 10 Numbers lessons in Arcade mode)
+	var arcadeNumCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'numbers' AND s.mode = 'arcade'`, profileID).Scan(&arcadeNumCount)
+	if arcadeNumCount >= 10 {
+		unlock("master_arcade_num")
+	}
+
+	// 40. Master Arcade Symbols (at least 10 Symbols lessons in Arcade mode)
+	var arcadeSymCount int
+	db.DB.QueryRow(`SELECT COUNT(DISTINCT s.exercise_id) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'symbols' AND s.mode = 'arcade'`, profileID).Scan(&arcadeSymCount)
+	if arcadeSymCount >= 10 {
+		unlock("master_arcade_sym")
+	}
+
+	// 41. Clean Code Pro (Code >80 WPM with 100% Accuracy)
+	var cleanCodePro bool
+	db.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'code' AND s.wpm >= 80 AND s.accuracy = 1.0)`, profileID).Scan(&cleanCodePro)
+	if cleanCodePro {
+		unlock("elite_code_speed")
+	}
+
+	// 42. Elite Spanish Speed (Spanish >110 WPM)
+	var eliteSpaSpeed bool
+	db.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'spanish' AND s.wpm >= 110)`, profileID).Scan(&eliteSpaSpeed)
+	if eliteSpaSpeed {
+		unlock("elite_spanish_speed")
+	}
+
+	// 43. Elite English Speed (English >110 WPM)
+	var eliteEngSpeed bool
+	db.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.category = 'english' AND s.wpm >= 110)`, profileID).Scan(&eliteEngSpeed)
+	if eliteEngSpeed {
+		unlock("elite_english_speed")
+	}
+
+	// 44. Endurance Iron (Complete 3 endurance sessions in a single day with accuracy >= 98%)
+	var enduranceIronCount int
+	db.DB.QueryRow(`SELECT COUNT(*) FROM sessions s JOIN exercises e ON s.exercise_id = e.id 
+		WHERE s.profile_id = ? AND e.is_endurance = 1 AND s.accuracy >= 0.98 AND DATE(s.completed_at) = DATE('now')`, profileID).Scan(&enduranceIronCount)
+	if enduranceIronCount >= 3 {
+		unlock("elite_endurance")
+	}
+
+	// 45. Supreme: Deity of the Tropa (Unlock at least 40 achievements)
+	var unlockedCount int
+	db.DB.QueryRow("SELECT COUNT(*) FROM achievements WHERE profile_id = ?", profileID).Scan(&unlockedCount)
+	if unlockedCount >= 40 {
+		unlock("deity_tropa")
 	}
 
 	return newlyUnlocked

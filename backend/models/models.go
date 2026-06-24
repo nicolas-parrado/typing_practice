@@ -4,23 +4,32 @@ import "time"
 
 // Profile represents a user profile (for La Tropa family members)
 type Profile struct {
-	ID         int       `json:"id"`
-	Name       string    `json:"name"`
-	XP         int       `json:"xp"`
-	Level      int       `json:"level"`
-	Streak     int       `json:"streak"`
-	LastActive string    `json:"last_active"` // YYYY-MM-DD format
-	CreatedAt  time.Time `json:"created_at"`
+	ID           int       `json:"id"`
+	Name         string    `json:"name"`
+	XP           int       `json:"xp"`
+	Level        int       `json:"level"`
+	Streak       int       `json:"streak"`
+	LastActive   string    `json:"last_active"` // YYYY-MM-DD format
+	Theme        string    `json:"theme"`
+	SoundEnabled bool      `json:"sound_enabled"`
+	SwitchType   string    `json:"switch_type"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 // Exercise represents a typing lesson or custom text
 type Exercise struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Content     string `json:"content"`
-	Category    string `json:"category"` // 'code', 'spanish', 'english', 'numbers', 'symbols'
-	Difficulty  string `json:"difficulty"` // 'easy', 'medium', 'hard', 'legend'
-	IsEndurance bool   `json:"is_endurance"`
+	ID                string  `json:"id"`
+	Title             string  `json:"title"`
+	Content           string  `json:"content"`
+	Category          string  `json:"category"`
+	Difficulty        string  `json:"difficulty"`
+	IsEndurance       bool    `json:"is_endurance"`
+	Unlocked          bool    `json:"unlocked"`
+	HighScoreWPM      float64 `json:"high_score_wpm"`
+	HighScoreAccuracy float64 `json:"high_score_accuracy"`
+	ArcadeWPM         float64 `json:"arcade_wpm"`
+	ArcadeAccuracy    float64 `json:"arcade_accuracy"`
+	PlayCount         int     `json:"play_count"`
 }
 
 // Session represents a completed typing practice run
