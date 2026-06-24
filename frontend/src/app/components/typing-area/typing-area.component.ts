@@ -132,6 +132,14 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
   isSaving = false;
   saveResponse: SaveSessionResponse | null = null;
 
+  correctStreak = 0;
+
+  getComboClass(): string {
+    if (this.correctStreak >= 40) return 'combo-fire';
+    if (this.correctStreak >= 20) return 'combo-purple';
+    return 'combo-green';
+  }
+
   ngOnInit() {
     this.resetTest();
   }
@@ -162,6 +170,7 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.deadKeyStep = 0;
     this.isSaving = false;
     this.saveResponse = null;
+    this.correctStreak = 0;
 
     // Load Ghost Target details
     const bestWpm = this.mode === 'arcade' ? (this.exercise.arcade_wpm || 0) : (this.exercise.high_score_wpm || 0);
@@ -348,6 +357,7 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
         this.typedHistory.pop();
         this.deadKeyStep = 0;
         this.deadKeyActive = false;
+        this.correctStreak = 0;
         
         this.sound.playKeySound();
         this.updateTargetKey();
@@ -408,6 +418,7 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.typedHistory.push(char);
     this.correctCharsCount++;
     this.cursorIndex++;
+    this.correctStreak++;
 
     // Reset sequence states
     this.deadKeyActive = false;
@@ -429,6 +440,7 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     
     this.errorsCount++;
     this.errorsMap[this.cursorIndex] = true;
+    this.correctStreak = 0;
 
     if (this.mode === 'arcade') {
       this.arcadeLives--;
@@ -500,18 +512,68 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     container.style.left = `${x}px`;
     container.style.top = `${y}px`;
 
-    // Emit 6 small particle nodes radiating outwards
-    for (let i = 0; i < 6; i++) {
+    // Dynamic configuration based on WPM
+    let particleCount = 4;
+    let baseVelocity = 30;
+
+    if (this.wpm >= 120) {
+      particleCount = 16;
+      baseVelocity = 70;
+    } else if (this.wpm >= 90) {
+      particleCount = 12;
+      baseVelocity = 55;
+    } else if (this.wpm >= 60) {
+      particleCount = 8;
+      baseVelocity = 45;
+    } else if (this.wpm >= 30) {
+      particleCount = 6;
+      baseVelocity = 35;
+    }
+
+    // Dynamic color based on streak (combo)
+    let color = 'var(--accent)';
+    let isGlowing = false;
+    let glowColor = '';
+
+    if (this.correctStreak >= 40) {
+      color = '#f97316'; // Naranja fuego
+      isGlowing = true;
+      glowColor = 'rgba(249, 115, 22, 0.8)';
+    } else if (this.correctStreak >= 20) {
+      color = '#a855f7'; // Púrpura
+      isGlowing = true;
+      glowColor = 'rgba(168, 85, 247, 0.8)';
+    } else if (this.correctStreak >= 10) {
+      color = '#10b981'; // Verde
+      isGlowing = true;
+      glowColor = 'rgba(16, 185, 129, 0.8)';
+    }
+
+    // Emit particle nodes radiating outwards
+    for (let i = 0; i < particleCount; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
       
       const angle = Math.random() * Math.PI * 2;
-      const velocity = 30 + Math.random() * 50;
+      const velocity = baseVelocity + Math.random() * 50;
       const dx = Math.cos(angle) * velocity;
       const dy = Math.sin(angle) * velocity;
 
       p.style.setProperty('--dx', `${dx}px`);
       p.style.setProperty('--dy', `${dy}px`);
+      
+      // Apply color and glow
+      p.style.backgroundColor = color;
+      if (isGlowing) {
+        p.style.boxShadow = `0 0 6px ${glowColor}, 0 0 12px ${glowColor}`;
+      }
+
+      // Slightly larger particles at high speeds
+      if (this.wpm >= 90) {
+        p.style.width = '6px';
+        p.style.height = '6px';
+      }
+
       container.appendChild(p);
     }
 

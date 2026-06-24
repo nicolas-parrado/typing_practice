@@ -68,22 +68,22 @@
     <div class="hand-svg-container">
       <svg viewBox="0 0 150 150" class="hand-svg" id="left-hand">
         <!-- Hand base outline (palm + wrist) -->
-        <path d="M25,75 C20,95 22,115 32,130 C42,145 62,145 68,130 C74,115 72,95 64,80" class="hand-palm-outline" />
+        <path d="M35,140 C28,120 22,95 25,75 C30,72 60,70 70,82 C75,90 73,120 65,140 Z" class="hand-palm-outline" />
         <!-- Fingers -->
         <!-- Left Pinky -->
-        <path d="M25,75 C21,60 17,45 18,30 C19,25 24,25 25,30 C27,45 32,60 35,75" 
+        <path d="M28,75 C26,62 23,48 23,35" 
               class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-pinky'}" />
         <!-- Left Ring -->
-        <path d="M38,68 C35,50 33,30 36,15 C37,10 42,10 43,15 C45,30 47,50 48,68" 
+        <path d="M40,71 C39,54 38,36 38,20" 
               class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-ring'}" />
         <!-- Left Middle -->
-        <path d="M51,65 C49,45 48,23 52,8 C53,3 58,3 59,8 C61,23 62,45 61,65" 
+        <path d="M52,68 C52,49 52,30 52,12" 
               class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-middle'}" />
         <!-- Left Index -->
-        <path d="M64,66 C65,48 67,30 72,16 C73,11 78,11 77,16 C74,30 73,48 72,66" 
+        <path d="M64,70 C65,54 67,38 67,22" 
               class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-index'}" />
         <!-- Left Thumb -->
-        <path d="M78,82 C85,85 97,88 108,82 C112,80 114,85 110,88 C98,98 85,95 78,88" 
+        <path d="M74,82 C82,85 92,87 102,83" 
               class="hand-finger" [ngClass]="{'finger-active-left': activeFinger === 'left-thumb' || activeFinger === 'thumb'}" />
       </svg>
       <span class="hand-label">Mano Izquierda</span>
@@ -93,22 +93,22 @@
     <div class="hand-svg-container">
       <svg viewBox="0 0 150 150" class="hand-svg" id="right-hand">
         <!-- Hand base outline (palm + wrist) -->
-        <path d="M125,75 C130,95 128,115 118,130 C108,145 88,145 82,130 C76,115 78,95 86,80" class="hand-palm-outline" />
+        <path d="M115,140 C122,120 128,95 125,75 C120,72 90,70 80,82 C75,90 77,120 85,140 Z" class="hand-palm-outline" />
         <!-- Fingers -->
         <!-- Right Thumb -->
-        <path d="M72,82 C65,85 53,88 42,82 C38,80 36,85 40,88 C52,98 65,95 72,88" 
+        <path d="M76,82 C68,85 58,87 48,83" 
               class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-thumb' || activeFinger === 'thumb'}" />
         <!-- Right Index -->
-        <path d="M86,66 C85,48 83,30 78,16 C77,11 72,11 73,16 C76,30 77,48 78,66" 
+        <path d="M86,70 C85,54 83,38 83,22" 
               class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-index'}" />
         <!-- Right Middle -->
-        <path d="M99,65 C101,45 102,23 98,8 C97,3 92,3 91,8 C89,23 88,45 89,65" 
+        <path d="M98,68 C98,49 98,30 98,12" 
               class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-middle'}" />
         <!-- Right Ring -->
-        <path d="M112,68 C115,50 117,30 114,15 C113,10 108,10 107,15 C105,30 103,50 102,68" 
+        <path d="M110,71 C111,54 112,36 112,20" 
               class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-ring'}" />
         <!-- Right Pinky -->
-        <path d="M125,75 C129,60 133,45 132,30 C131,25 126,25 125,30 C123,45 118,60 115,75" 
+        <path d="M122,75 C124,62 127,48 127,35" 
               class="hand-finger" [ngClass]="{'finger-active-right': activeFinger === 'right-pinky'}" />
       </svg>
       <span class="hand-label">Mano Derecha</span>

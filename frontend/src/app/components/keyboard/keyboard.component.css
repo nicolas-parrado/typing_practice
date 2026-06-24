@@ -112,34 +112,35 @@
 
 /* Default hand aesthetics */
 .hand-palm-outline {
-  fill: none;
-  stroke: var(--text-secondary);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  opacity: 0.22;
+  fill: var(--key-bg);
+  stroke: var(--key-border);
+  stroke-width: 1.5;
+  opacity: 0.12;
+  transition: all 0.3s ease;
 }
 
 .hand-finger {
   fill: none;
   stroke: var(--text-secondary);
-  stroke-width: 2.5;
+  stroke-width: 6px;
   stroke-linecap: round;
-  opacity: 0.35;
+  opacity: 0.2;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Highlighted hand finger styling */
 .finger-active-left {
   stroke: var(--finger-left) !important;
-  stroke-width: 5px !important;
+  stroke-width: 8px !important;
   opacity: 1 !important;
-  filter: drop-shadow(0 0 4px var(--finger-left));
+  filter: drop-shadow(0 0 6px var(--finger-left));
 }
 
 .finger-active-right {
   stroke: var(--finger-right) !important;
-  stroke-width: 5px !important;
+  stroke-width: 8px !important;
   opacity: 1 !important;
-  filter: drop-shadow(0 0 4px var(--finger-right));
+  filter: drop-shadow(0 0 6px var(--finger-right));
 }
 
 .hand-label {

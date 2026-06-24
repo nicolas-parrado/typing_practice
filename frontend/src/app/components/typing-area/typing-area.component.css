@@ -460,3 +460,40 @@
   color: var(--success);
   filter: drop-shadow(0 0 6px var(--success));
 }
+
+/* --- COMBO STREAK STYLES --- */
+.combo-box {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.combo-green {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid #10b981 !important;
+  color: #10b981 !important;
+}
+
+.combo-purple {
+  background: rgba(168, 85, 247, 0.12) !important;
+  border: 1px solid #a855f7 !important;
+  color: #a855f7 !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+}
+
+.combo-fire {
+  background: rgba(249, 115, 22, 0.15) !important;
+  border: 1px solid #f97316 !important;
+  color: #f97316 !important;
+  box-shadow: 0 0 15px rgba(249, 115, 22, 0.45);
+}
+
+.combo-box .svg-fire {
+  margin-left: 4px;
+  stroke: currentColor;
+  fill: currentColor;
+}

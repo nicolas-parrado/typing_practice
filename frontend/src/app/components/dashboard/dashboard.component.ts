@@ -411,6 +411,7 @@ export class DashboardComponent implements OnInit {
     if (this.activeProfile?.id) {
       this.api.getProfile(this.activeProfile.id).subscribe(p => this.activeProfile = p);
     }
+    this.loadExercises();
   }
 
   setTheme(theme: string) {
