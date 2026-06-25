@@ -381,8 +381,15 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
       const targetStroke = this.deadKeySequence.keys[this.deadKeyStep];
       const targetCode = this.deadKeySequence.codes[this.deadKeyStep];
 
-      // Validate matching input
-      if (key === targetStroke || code === targetCode) {
+      // Validate matching input (with tolerance for Backquote/IntlBackslash swapping on macOS)
+      let isMatch = (key === targetStroke || code === targetCode);
+      if (!isMatch && (targetCode === 'IntlBackslash' || targetCode === 'Backquote')) {
+        if (code === 'IntlBackslash' || code === 'Backquote') {
+          isMatch = true;
+        }
+      }
+
+      if (isMatch) {
         // Correct step in sequence
         this.sound.playKeySound();
         this.createParticle(event);
