@@ -26,12 +26,15 @@
         }
       </div>
 
-      <button class="btn-primary" (click)="startTest()">
-        <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-        </svg>
-        Comenzar Práctica
-      </button>
+      <div class="start-actions">
+        <button class="btn-primary" (click)="startTest()">
+          <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Comenzar Práctica
+        </button>
+        <span class="keyboard-shortcut-hint">O presiona <kbd>Enter</kbd> o <kbd>Espacio</kbd> para comenzar</span>
+      </div>
     </div>
   }
 
@@ -172,6 +175,25 @@
           ¡Excelente Trabajo!
         </h2>
         <p class="results-desc">Has completado con éxito la lección.</p>
+        @if (mode !== 'arcade' && !passedGoal) {
+          <div class="unlock-warning-box">
+            <svg class="svg-icon svg-warning" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>
+              Para desbloquear la siguiente lección necesitas alcanzar al menos <strong>25 WPM</strong> y <strong>90% de precisión</strong>.
+              @if (wpm < 25 && accuracy >= 90) {
+                Te faltan <strong>{{ 25 - wpm }} WPM</strong>.
+              } @else if (wpm >= 25 && accuracy < 90) {
+                Te falta <strong>{{ 90 - accuracy }}% de precisión</strong>.
+              } @else {
+                Te faltan <strong>{{ 25 - wpm }} WPM</strong> y <strong>{{ 90 - accuracy }}% de precisión</strong>.
+              }
+            </span>
+          </div>
+        }
       }
 
       <div class="results-grid">

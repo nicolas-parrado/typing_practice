@@ -131,6 +131,7 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
   // Saving state
   isSaving = false;
   saveResponse: SaveSessionResponse | null = null;
+  passedGoal = false;
 
   correctStreak = 0;
 
@@ -170,6 +171,7 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.deadKeyStep = 0;
     this.isSaving = false;
     this.saveResponse = null;
+    this.passedGoal = false;
     this.correctStreak = 0;
 
     // Load Ghost Target details
@@ -337,6 +339,14 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
+    if (!this.isPlaying && !this.isFinished && !this.isSaving) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.startTest();
+        return;
+      }
+    }
+
     if (!this.isPlaying || this.isFinished || this.isSaving) return;
 
     // Ignore structural modifier keys alone
@@ -464,6 +474,7 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.isPlaying = false;
     this.stopTimers();
     this.sound.playSuccessSound();
+    this.passedGoal = this.wpm >= 25 && this.accuracy >= 90;
     this.saveSessionMetrics();
   }
 
