@@ -96,6 +96,10 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
   ghostDiffWpm = 0;
   ghostDiffAccuracy = 0;
   hasGhostRecord = false;
+  targetGoalWpm = 25;
+  minGoalAccuracy = 90;
+  coachMessage = '';
+  coachWeakKeys: { char: string; errors: number }[] = [];
 
   // Key tracking
   expectedKey = '';
@@ -138,7 +142,8 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
   getComboClass(): string {
     if (this.correctStreak >= 40) return 'combo-fire';
     if (this.correctStreak >= 20) return 'combo-purple';
-    return 'combo-green';
+    if (this.correctStreak >= 10) return 'combo-blue';
+    return '';
   }
 
   ngOnInit() {
@@ -154,14 +159,14 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.isPlaying = false;
     this.isFinished = false;
     this.cursorIndex = 0;
-    this.errorsMap = {};
-    this.typedHistory = [];
     this.wpm = 0;
     this.accuracy = 100;
     this.durationSeconds = 0;
     this.errorsCount = 0;
     this.backspacesUsed = 0;
     this.correctCharsCount = 0;
+    this.errorsMap = {};
+    this.typedHistory = [];
     this.arcadeLives = this.mode === 'arcade' ? 3 : 999;
     this.telemetry = [];
     this.keyLatencies = {};
@@ -173,8 +178,13 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.saveResponse = null;
     this.passedGoal = false;
     this.correctStreak = 0;
+    this.coachMessage = '';
+    this.coachWeakKeys = [];
 
-    // Load Ghost Target details
+    // Load Adaptive Goals & Ghost Target details
+    this.targetGoalWpm = this.exercise.target_wpm || 25;
+    this.minGoalAccuracy = Math.round((this.exercise.min_accuracy || 0.90) * 100);
+
     const bestWpm = this.mode === 'arcade' ? (this.exercise.arcade_wpm || 0) : (this.exercise.high_score_wpm || 0);
     const bestAcc = this.mode === 'arcade' ? (this.exercise.arcade_accuracy || 0) : (this.exercise.high_score_accuracy || 0);
     if (bestWpm > 0) {
@@ -182,8 +192,8 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
       this.ghostTargetAccuracy = Math.round(bestAcc * 100);
       this.hasGhostRecord = true;
     } else {
-      this.ghostTargetWpm = 25;
-      this.ghostTargetAccuracy = 90;
+      this.ghostTargetWpm = this.targetGoalWpm;
+      this.ghostTargetAccuracy = this.minGoalAccuracy;
       this.hasGhostRecord = false;
     }
     this.ghostDiffWpm = 0;
@@ -474,8 +484,32 @@ export class TypingAreaComponent implements OnInit, OnDestroy {
     this.isPlaying = false;
     this.stopTimers();
     this.sound.playSuccessSound();
-    this.passedGoal = this.wpm >= 25 && this.accuracy >= 90;
+    this.targetGoalWpm = this.exercise.target_wpm || 25;
+    this.minGoalAccuracy = Math.round((this.exercise.min_accuracy || 0.90) * 100);
+    this.passedGoal = this.wpm >= this.targetGoalWpm && this.accuracy >= this.minGoalAccuracy;
+    this.generateCoachDiagnosis();
     this.saveSessionMetrics();
+  }
+
+  private generateCoachDiagnosis() {
+    // Identify troublesome keys in this session
+    const errorsList: { char: string; errors: number }[] = [];
+    for (const [ch, stat] of Object.entries(this.keyMetricsPayload)) {
+      if (stat.errors > 0) {
+        errorsList.push({ char: ch, errors: stat.errors });
+      }
+    }
+    errorsList.sort((a, b) => b.errors - a.errors);
+    this.coachWeakKeys = errorsList.slice(0, 3);
+
+    // Synthesize pedagogical coach advice
+    if (this.accuracy < this.minGoalAccuracy) {
+      this.coachMessage = `Prioriza la precisión antes que la velocidad. Es normal querer escribir rápido, pero la memoria muscular se construye con movimientos limpios y pausados. Reduce el ritmo un 20% en la siguiente ronda.`;
+    } else if (this.wpm < this.targetGoalWpm) {
+      this.coachMessage = `¡Excelente nivel de precisión (${this.accuracy}%)! Tu técnica es limpia. Ahora busca soltar la tensión en las manos y mantener un flujo continuo entre palabras sin pausas prolongadas.`;
+    } else {
+      this.coachMessage = `¡Rendimiento sobresaliente! Superaste el objetivo con ${this.wpm} WPM y ${this.accuracy}% de precisión. Tu coordinación motora está en el punto óptimo para la siguiente etapa.`;
+    }
   }
 
   private saveSessionMetrics() {

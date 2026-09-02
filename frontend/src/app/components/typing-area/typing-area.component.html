@@ -5,12 +5,20 @@
       <span class="category-tag">{{ exercise.category | uppercase }}</span>
       <h2 class="title-display">{{ exercise.title }}</h2>
       <p class="desc">
-        Prepárate para practicar. Este ejercicio tiene <strong>{{ exercise.content.length }}</strong> caracteres y pertenece a la dificultad <strong>{{ exercise.difficulty }}</strong>.
+        Prepárate para practicar. Este ejercicio tiene <strong>{{ exercise.content.length }}</strong> caracteres y pertenece a la etapa <strong>{{ exercise.stage || exercise.difficulty }}</strong>.
       </p>
 
       <div class="modes-info">
         <div class="info-item">
-          <span class="label">Modo de Práctica:</span>
+          <span class="label">Etapa Curricular:</span>
+          <span class="value">{{ exercise.stage || 'General' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Meta de Aprobación:</span>
+          <span class="value">{{ targetGoalWpm }} WPM / {{ minGoalAccuracy }}% Precisión</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Modo:</span>
           <span class="value">{{ mode | uppercase }}</span>
         </div>
         @if (mode === 'arcade') {
@@ -174,7 +182,7 @@
           </svg>
           ¡Excelente Trabajo!
         </h2>
-        <p class="results-desc">Has completado con éxito la lección.</p>
+        <p class="results-desc">Has completado la lección de la etapa <strong>{{ exercise.stage || exercise.category }}</strong>.</p>
         @if (mode !== 'arcade' && !passedGoal) {
           <div class="unlock-warning-box">
             <svg class="svg-icon svg-warning" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -183,17 +191,45 @@
               <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
             <span>
-              Para desbloquear la siguiente lección necesitas alcanzar al menos <strong>25 WPM</strong> y <strong>90% de precisión</strong>.
-              @if (wpm < 25 && accuracy >= 90) {
-                Te faltan <strong>{{ 25 - wpm }} WPM</strong>.
-              } @else if (wpm >= 25 && accuracy < 90) {
-                Te falta <strong>{{ 90 - accuracy }}% de precisión</strong>.
+              Para desbloquear la siguiente lección necesitas alcanzar la meta de esta etapa: <strong>{{ targetGoalWpm }} WPM</strong> y <strong>{{ minGoalAccuracy }}% de precisión</strong>.
+              @if (wpm < targetGoalWpm && accuracy >= minGoalAccuracy) {
+                Te faltan <strong>{{ targetGoalWpm - wpm }} WPM</strong>.
+              } @else if (wpm >= targetGoalWpm && accuracy < minGoalAccuracy) {
+                Te falta <strong>{{ minGoalAccuracy - accuracy }}% de precisión</strong>.
               } @else {
-                Te faltan <strong>{{ 25 - wpm }} WPM</strong> y <strong>{{ 90 - accuracy }}% de precisión</strong>.
+                Te faltan <strong>{{ targetGoalWpm - wpm }} WPM</strong> y <strong>{{ minGoalAccuracy - accuracy }}% de precisión</strong>.
               }
             </span>
           </div>
         }
+      }
+
+      <!-- Coach Feedback Banner -->
+      @if (coachMessage) {
+        <div class="coach-feedback-box glass-panel">
+          <div class="coach-header-row">
+            <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <h4>Consejo del Entrenador Activo</h4>
+          </div>
+          <p class="coach-message-text">{{ coachMessage }}</p>
+          @if (coachWeakKeys.length > 0) {
+            <div class="coach-weak-row">
+              <span class="coach-weak-lbl">Teclas que requirieron corrección:</span>
+              <div class="weak-tags-list">
+                @for (item of coachWeakKeys; track item.char) {
+                  <span class="coach-key-pill">
+                    <code>{{ item.char === ' ' ? 'Espacio' : item.char }}</code>
+                    <small>({{ item.errors }} {{ item.errors === 1 ? 'error' : 'errores' }})</small>
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
       }
 
       <div class="results-grid">

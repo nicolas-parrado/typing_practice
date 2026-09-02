@@ -397,10 +397,30 @@ export class DashboardComponent implements OnInit {
       content: content,
       category: "symbols",
       difficulty: "medium",
+      stage: "Entrenamiento Focalizado",
+      target_wpm: 18,
+      min_accuracy: 0.90,
       is_endurance: false
     };
 
     this.startExercise(smartExercise, 'lesson');
+  }
+
+  get recommendedExercise(): Exercise | null {
+    if (!this.exercises || this.exercises.length === 0) return null;
+    const unpassed = this.exercises.find(ex => {
+      if (!ex.unlocked) return false;
+      return !this.isExercisePassed(ex);
+    });
+    return unpassed || this.exercises[0];
+  }
+
+  isExercisePassed(ex: Exercise): boolean {
+    const targetWpm = ex.target_wpm || 25;
+    const minAcc = ex.min_accuracy || 0.90;
+    const bestWpm = Math.max(ex.high_score_wpm || 0, ex.arcade_wpm || 0);
+    const bestAcc = Math.max(ex.high_score_accuracy || 0, ex.arcade_accuracy || 0);
+    return bestWpm >= targetWpm && bestAcc >= minAcc;
   }
 
   onTypingFinished() {

@@ -59,7 +59,10 @@ func createTables() {
 			content TEXT NOT NULL,
 			category TEXT NOT NULL,
 			difficulty TEXT NOT NULL,
-			is_endurance INTEGER DEFAULT 0
+			is_endurance INTEGER DEFAULT 0,
+			stage TEXT DEFAULT '',
+			target_wpm REAL DEFAULT 25.0,
+			min_accuracy REAL DEFAULT 0.90
 		);`,
 
 		`CREATE TABLE IF NOT EXISTS sessions (
@@ -115,4 +118,7 @@ func createTables() {
 	_, _ = DB.Exec("ALTER TABLE profiles ADD COLUMN theme TEXT DEFAULT 'glass'")
 	_, _ = DB.Exec("ALTER TABLE profiles ADD COLUMN sound_enabled INTEGER DEFAULT 1")
 	_, _ = DB.Exec("ALTER TABLE profiles ADD COLUMN switch_type TEXT DEFAULT 'blue'")
+	_, _ = DB.Exec("ALTER TABLE exercises ADD COLUMN stage TEXT DEFAULT ''")
+	_, _ = DB.Exec("ALTER TABLE exercises ADD COLUMN target_wpm REAL DEFAULT 25.0")
+	_, _ = DB.Exec("ALTER TABLE exercises ADD COLUMN min_accuracy REAL DEFAULT 0.90")
 }

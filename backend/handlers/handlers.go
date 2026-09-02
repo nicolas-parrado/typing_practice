@@ -241,7 +241,7 @@ func GetExercises(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Fetch Exercises, ordered numerically/alphabetically
-	query := "SELECT id, title, content, category, difficulty, is_endurance FROM exercises WHERE 1=1"
+	query := "SELECT id, title, content, category, difficulty, is_endurance, stage, target_wpm, min_accuracy FROM exercises WHERE 1=1"
 	args := []interface{}{}
 
 	if category != "" {
@@ -275,7 +275,7 @@ func GetExercises(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var e models.Exercise
 		var isEndInt int
-		err := rows.Scan(&e.ID, &e.Title, &e.Content, &e.Category, &e.Difficulty, &isEndInt)
+		err := rows.Scan(&e.ID, &e.Title, &e.Content, &e.Category, &e.Difficulty, &isEndInt, &e.Stage, &e.TargetWPM, &e.MinAccuracy)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 			return
@@ -284,7 +284,7 @@ func GetExercises(w http.ResponseWriter, r *http.Request) {
 		exercises = append(exercises, e)
 	}
 
-	// 3. Calculate locks and bind scores
+	// 3. Calculate locks and bind scores adaptively
 	previousPassed := true
 	for idx := range exercises {
 		ex := &exercises[idx]
@@ -304,8 +304,12 @@ func GetExercises(w http.ResponseWriter, r *http.Request) {
 		}
 
 		hasPassed := false
-		if exScore != nil && exScore.passed {
-			hasPassed = true
+		if exScore != nil {
+			// Check against the lesson's specific adaptive targets
+			if (exScore.classicWPM >= ex.TargetWPM && exScore.classicAcc >= ex.MinAccuracy) ||
+				(exScore.arcadeWPM >= ex.TargetWPM && exScore.arcadeAcc >= ex.MinAccuracy) {
+				hasPassed = true
+			}
 		}
 		previousPassed = hasPassed
 	}
@@ -348,25 +352,26 @@ func SaveSession(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback()
 
-	// 1. Insert Session
-	_, err = tx.Exec(`INSERT INTO sessions 
-		(profile_id, exercise_id, mode, wpm, accuracy, duration_seconds, raw_data_json, completed_at) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+	// 1. Insert session record
+	_, err = tx.Exec(`INSERT INTO sessions (profile_id, exercise_id, mode, wpm, accuracy, duration_seconds, raw_data_json) 
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		payload.ProfileID, payload.ExerciseID, payload.Mode, payload.WPM, payload.Accuracy, payload.DurationSeconds, payload.RawDataJSON)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// 2. Manage Failed/Retry states
-	if payload.Accuracy < 0.90 {
+	// 2. Manage Failed/Retry states using exercise target or default
+	var minAcc float64 = 0.90
+	_ = tx.QueryRow("SELECT min_accuracy FROM exercises WHERE id = ?", payload.ExerciseID).Scan(&minAcc)
+	if payload.Accuracy < minAcc {
 		// Insert or replace in failed attempts
 		_, err = tx.Exec(`INSERT OR REPLACE INTO failed_attempts 
 			(profile_id, exercise_id, wpm, accuracy, created_at) 
 			VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
 			payload.ProfileID, payload.ExerciseID, payload.WPM, payload.Accuracy)
-	} else if payload.Accuracy >= 0.95 {
-		// Clean up from retry queue since they aced it
+	} else if payload.Accuracy >= minAcc+0.05 || payload.Accuracy >= 0.95 {
+		// Clean up from retry queue since they mastered it
 		_, err = tx.Exec(`DELETE FROM failed_attempts WHERE profile_id = ? AND exercise_id = ?`,
 			payload.ProfileID, payload.ExerciseID)
 	}

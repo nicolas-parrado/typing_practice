@@ -22,6 +22,9 @@ export interface Exercise {
   category: string;
   difficulty: string;
   is_endurance: boolean;
+  stage?: string;
+  target_wpm?: number;
+  min_accuracy?: number;
   unlocked?: boolean;
   high_score_wpm?: number;
   high_score_accuracy?: number;

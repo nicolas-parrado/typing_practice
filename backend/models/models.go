@@ -24,6 +24,9 @@ type Exercise struct {
 	Category          string  `json:"category"`
 	Difficulty        string  `json:"difficulty"`
 	IsEndurance       bool    `json:"is_endurance"`
+	Stage             string  `json:"stage"`
+	TargetWPM         float64 `json:"target_wpm"`
+	MinAccuracy       float64 `json:"min_accuracy"`
 	Unlocked          bool    `json:"unlocked"`
 	HighScoreWPM      float64 `json:"high_score_wpm"`
 	HighScoreAccuracy float64 `json:"high_score_accuracy"`
