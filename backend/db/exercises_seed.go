@@ -23,11 +23,14 @@ type TempExercise struct {
 
 // SeedExercises checks if exercises table is empty or stale, and seeds progressive lessons
 func SeedExercises(db *sql.DB) {
-	// 1. Detect if exercises table has old non-progressive seeds
+	// 1. Detect if exercises table has old non-progressive seeds or legacy Spanish-layout home row
 	var hasStages bool
 	_ = db.QueryRow("SELECT EXISTS(SELECT 1 FROM exercises WHERE stage IS NOT NULL AND stage != '')").Scan(&hasStages)
-	if !hasStages {
-		log.Println("Old exercises detected without progressive stages. Purging exercises table for active learning curriculum...")
+	var hasLegacyHomeRow bool
+	_ = db.QueryRow("SELECT EXISTS(SELECT 1 FROM exercises WHERE id = 'spa_1' AND content LIKE '%jklñ%')").Scan(&hasLegacyHomeRow)
+
+	if !hasStages || hasLegacyHomeRow {
+		log.Println("Old exercises detected without progressive stages or using non-US-International home row. Purging exercises table for US International curriculum...")
 		_, err := db.Exec("DELETE FROM exercises")
 		if err != nil {
 			log.Printf("Error purging legacy exercises: %v", err)
@@ -122,23 +125,23 @@ func SeedExercises(db *sql.DB) {
 func generateSpanishExercises(rng *rand.Rand) []TempExercise {
 	var list []TempExercise
 
-	// Etapa 1: Fila Base (Home Row: a s d f j k l ñ) - 15 lecciones
+	// Etapa 1: Fila Base (Home Row EEUU Internacional: a s d f j k l ;) - 15 lecciones
 	homeRowPatterns := []string{
-		"asdf jklñ asdf jklñ asdf jklñ fdsa ñlkj fdsa ñlkj",
-		"aaa sss ddd fff jjj kkk lll ñññ fff jjj ddd kkk",
-		"fa da la sa ja ka ña fa da la sa ja ka ña",
-		"fad kas sal fal das lak ñal fas dak sal kas",
-		"la sal da la fala salsa jala alas alas fala",
-		"fada fada salsa salsa falda falda alada alada",
-		"da la sal a la fada da la falda a la salsa",
-		"kala jala la falda lada fada faja jala sala",
-		"alfafa fajas saladas aladas fallas salsa sal",
-		"alas aladas dadas a la fada jala la sal sala",
-		"la fada jala la salsa salada a la falda alada",
-		"da la faja a la fada salsa salada da la fala",
-		"falla la salsa jala la fada salada a la sala",
-		"faldas aladas dadas a la salsa jala la fala",
-		"la sala da sal a la fada alada con su faja",
+		"asdf jkl; asdf jkl; asdf jkl; fdsa ;lkj fdsa ;lkj",
+		"aaa sss ddd fff jjj kkk lll ;;; fff jjj ddd kkk",
+		"fa da la sa ja ka ha ga ;a fa da la sa ja ka ha ga ;a",
+		"fad kas sal fal das lak gas fas dak sal kas",
+		"la sal da la gala salsa jala alas alas gala",
+		"faja faja salsa salsa falda falda alada alada",
+		"da la sal a la gala da la falda a la salsa",
+		"gala jala la falda hada faja jala sala gas",
+		"alfalfa fajas saladas aladas fallas salsa sal",
+		"alas aladas dadas a la sala jala la sal sala",
+		"la gala jala la salsa salada a la falda alada",
+		"da la faja a la gala salsa salada da la sala",
+		"falla la salsa jala la gala salada a la sala",
+		"faldas aladas dadas a la salsa jala la gala",
+		"la sala da sal a la gala alada con su faja",
 	}
 	for i, p := range homeRowPatterns {
 		list = append(list, TempExercise{
